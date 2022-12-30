@@ -104,4 +104,11 @@ io.on('connection', (socket) => {
     socket.on('erase_all', (room_name) => {
         io.to(room_name).emit('erase_all', '');
     });
+
+    socket.on('msg', ({sender_name, message, word, room_name}) => {
+        io.to(room_name).emit('msg', {
+            sender_name : sender_name,
+            message : message
+        });
+    });
 });

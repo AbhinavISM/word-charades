@@ -1,3 +1,5 @@
+import 'dart:html';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
@@ -5,6 +7,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:yayscribbl/models/touch_points.dart';
 
 import '../models/my_custom_painter.dart';
+import '../widgets/my_clipper.dart';
 
 class PaintScreen extends StatefulWidget {
   const PaintScreen({super.key});
@@ -23,12 +26,26 @@ class _PaintScreenState extends State<PaintScreen> {
   Color selectedColor = Colors.black;
   double opacity = 1;
   double strokeWidth = 2;
+  List<Widget> hiddenTextWidget = [];
+  ScrollController scrollController = ScrollController();
+  List<Map> messages = [];
+  TextEditingController controller = TextEditingController();
 
   @override
   void initState() {
     connect();
     super.initState();
     // connect();
+  }
+
+  void renderHiddenTextWidget(String text) {
+    hiddenTextWidget.clear();
+    for (int i = 0; i < text.length; i++) {
+      hiddenTextWidget.add(const Text(
+        '_',
+        style: TextStyle(fontSize: 16),
+      ));
+    }
   }
 
   void connect() {
@@ -45,6 +62,7 @@ class _PaintScreenState extends State<PaintScreen> {
       socket.on('update_room', (roomData) {
         setState(() {
           dataOfRoom = roomData;
+          renderHiddenTextWidget(roomData['word']);
         });
       });
     });
@@ -85,6 +103,17 @@ class _PaintScreenState extends State<PaintScreen> {
       setState(() {
         points.clear();
       });
+    });
+
+    socket.on('msg', (data) {
+      setState(() {
+        messages.add(data);
+      });
+      scrollController.animateTo(
+        scrollController.position.maxScrollExtent + 20,
+        duration: Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+      );
     });
 
     socket.on('notCorrectGame', (err) {
@@ -155,7 +184,7 @@ class _PaintScreenState extends State<PaintScreen> {
           children: [
             Container(
               width: width,
-              height: height * 0.6,
+              height: height * 0.5,
               child: GestureDetector(
                 onPanUpdate: (details) {
                   print(details.localPosition.dx);
@@ -185,9 +214,12 @@ class _PaintScreenState extends State<PaintScreen> {
                 },
                 child: SizedBox.expand(
                   child: RepaintBoundary(
-                    child: CustomPaint(
-                      size: Size.infinite,
-                      painter: MyCustomPainter(pointsList: points),
+                    child: ClipRect(
+                      clipper: MyClipper(height: height * 0.55, width: width),
+                      child: CustomPaint(
+                        size: Size.infinite,
+                        painter: MyCustomPainter(pointsList: points),
+                      ),
                     ),
                   ),
                 ),
@@ -228,8 +260,68 @@ class _PaintScreenState extends State<PaintScreen> {
                 )
               ],
             ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: hiddenTextWidget,
+            ),
+            Container(
+              height: MediaQuery.of(context).size.height * 0.3,
+              child: ListView.builder(
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(
+                      messages[index]["sender_name"],
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      messages[index]["message"],
+                      style: const TextStyle(color: Colors.black, fontSize: 16),
+                    ),
+                  );
+                },
+                controller: scrollController,
+                shrinkWrap: true,
+                itemCount: messages.length,
+              ),
+            ),
           ],
-        )
+        ),
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextField(
+              controller: controller,
+              onSubmitted: ((value) {
+                if (value.trim().isNotEmpty) {
+                  Map msgMap = {
+                    'sender_name': routeArgs["nick_name"],
+                    'message': value.trim(),
+                    'word': dataOfRoom["word"],
+                    'room_name': dataOfRoom["room_name"]
+                  };
+                  socket.emit('msg', msgMap);
+                  controller.clear();
+                }
+              }),
+              autocorrect: false,
+              decoration: InputDecoration(
+                labelText: "guess the word!",
+                filled: true,
+                fillColor: const Color.fromARGB(255, 244, 244, 244),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Colors.transparent),
+                ),
+              ),
+              textInputAction: TextInputAction.done,
+            ),
+          ),
+        ),
       ],
     ));
   }
