@@ -105,10 +105,86 @@ io.on('connection', (socket) => {
         io.to(room_name).emit('erase_all', '');
     });
 
-    socket.on('msg', ({sender_name, message, word, room_name}) => {
-        io.to(room_name).emit('msg', {
-            sender_name : sender_name,
-            message : message
-        });
+    socket.on('msg', async({sender_name, message, word, room_name, guessedUserCounter, total_time, time_taken}) => {
+        try{
+            if(message == word){
+                let room = await Room.findOne({room_name});
+                if(time_taken!=0){
+                    console.log('point update on server');
+                    room.players.filter(
+                        (player) => player.nick_name == sender_name
+                    )[0].points += total_time-time_taken;
+                }
+                room = await room.save();
+                io.to(room_name).emit('msg', {
+                    sender_name : sender_name,
+                    message : 'Guessed it!',
+                    guessedUserCounter: guessedUserCounter + 1
+                });
+            }else{
+                io.to(room_name).emit('msg', {
+                    sender_name : sender_name,
+                    message : message,
+                    guessedUserCounter: guessedUserCounter
+                });
+                socket.emit('close_input', '');
+            }
+        }catch(err){
+            console.log(err);
+        }
     });
+
+    socket.on('change_turn',async(room_name)=> {
+        console.log('server change turn called');
+        try{
+            let room = await Room.findOne({room_name});
+            // let turnIndex = room.turnIndex;
+            if(room.turnIndex+1 == room.players.length){
+                room.currentRound+=1;
+            }
+            if(room.currentRound<=room.max_rounds){
+                const word = getWord();
+                room.word = word;
+                room.turnIndex = (room.turnIndex+1) % room.players.length;
+                room.turn = room.players[room.turnIndex];
+                room = await room.save();
+                console.log('we are here');
+                io.to(room_name).emit('change_turn', room);
+            }
+            else{
+                io.to(room_name).emit('show_leader_board', room);
+            }
+        }
+        catch(err){
+            console.log(err);
+        }
+    });
+
+    socket.on('update_score', async(room_name)=>{
+        try{
+            const room = await Room.findOne({room_name});
+            io.to(room_name).emit('update_score', room);
+        }catch(err){
+            console.log(err);
+        }
+    });
+
+    socket.on('disconnect', async()=>{
+        try{
+            let room = await Room.findOne({'players.socketID': socket.id});
+            for(let i = 0; i<room.players.length; i++){
+                if(room.players[i].socketID === socket.id){
+                    room.players.splice(i,1);
+                }
+            }
+            room = await room.save();
+            if(room.players.length === 1){
+                socket.broadcast.to(room.room_name).emit('show_leader_board', room);
+            }else{
+                socket.broadcast.to(room.room_name).emit('user_disconnected', room);
+            }
+        } catch(err){
+            console.log(err);
+        }
+    })
 });
