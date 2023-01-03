@@ -121,13 +121,13 @@ io.on('connection', (socket) => {
                     message : 'Guessed it!',
                     guessedUserCounter: guessedUserCounter + 1
                 });
+                socket.emit('close_input', '');
             }else{
                 io.to(room_name).emit('msg', {
                     sender_name : sender_name,
                     message : message,
                     guessedUserCounter: guessedUserCounter
                 });
-                socket.emit('close_input', '');
             }
         }catch(err){
             console.log(err);
