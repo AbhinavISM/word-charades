@@ -143,12 +143,12 @@ io.on('connection', (socket) => {
                 room.currentRound+=1;
             }
             if(room.currentRound<=room.max_rounds){
-                const word = getWord();
+                const word = await getWord();
                 room.word = word;
                 room.turnIndex = (room.turnIndex+1) % room.players.length;
                 room.turn = room.players[room.turnIndex];
                 room = await room.save();
-                console.log('we are here');
+                console.log(room);
                 io.to(room_name).emit('change_turn', room);
             }
             else{

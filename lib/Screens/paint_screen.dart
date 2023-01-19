@@ -2,11 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:provider/provider.dart';
 
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:yayscribbl/Screens/final_leader_board.dart';
 import 'package:yayscribbl/Screens/waiting_screen.dart';
 import 'package:yayscribbl/models/touch_points.dart';
+import 'package:yayscribbl/room_data.dart';
+import 'package:yayscribbl/socket_client.dart';
+import 'package:yayscribbl/socket_repository.dart';
 
 import '../models/my_custom_painter.dart';
 import '../widgets/my_clipper.dart';
@@ -21,9 +25,11 @@ class PaintScreen extends StatefulWidget {
 
 class _PaintScreenState extends State<PaintScreen> {
   late IO.Socket socket;
-  Map dataOfRoom = {};
-  bool firstBuild = true;
-  late dynamic routeArgs;
+  late SocketRepository socketRepository;
+  late Map dataOfRoom;
+  late bool firstBuild;
+  // late final dynamic routeArgs;
+  late String nickName;
   List<TouchPoints> points = [];
   StrokeCap strokeType = StrokeCap.round;
   Color selectedColor = Colors.black;
@@ -41,11 +47,19 @@ class _PaintScreenState extends State<PaintScreen> {
   int winnerPoints = 0;
   String winner = '';
   bool showFinalLeaderboard = false;
+
   @override
   void initState() {
-    connect();
+    firstBuild = true;
+    print('init state ran');
     super.initState();
-    // connect();
+  }
+
+  @override
+  void didChangeDependencies() {
+    socketRepository = Provider.of<SocketRepository>(context);
+    socket = socketRepository.socket!;
+    super.didChangeDependencies();
   }
 
   @override
@@ -80,136 +94,123 @@ class _PaintScreenState extends State<PaintScreen> {
     }
   }
 
-  void connect() {
-    socket = IO.io(
-        'http://localhost:4000',
-        IO.OptionBuilder()
-            .setTransports(['websocket'])
-            .disableAutoConnect()
-            .build());
-    socket.connect();
-
-    socket.onConnect((data) {
-      print("connected to socket");
-      socket.on('update_room', (roomData) {
-        setState(() {
-          dataOfRoom = roomData;
-          renderHiddenTextWidget(roomData['word']);
-        });
-        if (roomData['isJoin'] != true) {
-          startTimer();
-        }
-      });
+  void updateRoomEx(Map roomData) {
+    setState(() {
+      dataOfRoom = roomData;
+      renderHiddenTextWidget(roomData['word']);
     });
+    if (roomData['isJoin'] != true) {
+      startTimer();
+    }
+  }
 
-    socket.on('points_to_draw', (point) {
-      if (point['details'] != null) {
-        setState(() {
-          points.add(TouchPoints(
-            paint: Paint()
-              ..strokeCap = strokeType
-              ..isAntiAlias = true
-              ..color = selectedColor.withOpacity(opacity)
-              ..strokeWidth = strokeWidth,
-            point: Offset(
-              (point['details']['dx']),
-              (point['details']['dy']),
-            ),
-          ));
-        });
-      }
+  void pointsToDrawEx(Map point) {
+    setState(() {
+      points.add(TouchPoints(
+        paint: Paint()
+          ..strokeCap = strokeType
+          ..isAntiAlias = true
+          ..color = selectedColor.withOpacity(opacity)
+          ..strokeWidth = strokeWidth,
+        point: Offset(
+          (point['details']['dx'] as double),
+          (point['details']['dy'] as double),
+        ),
+      ));
     });
+  }
 
-    socket.on('color_change', (colorString) {
-      int value = int.parse(colorString, radix: 16);
-      Color updatedColor = Color(value);
-      setState(() {
-        selectedColor = updatedColor;
-      });
+  void updatedColorEx(Color updatedColor) {
+    setState(() {
+      selectedColor = updatedColor;
     });
+  }
 
-    socket.on('stroke_width', (value) {
-      setState(() {
-        strokeWidth = value.toDouble();
-      });
+  void strokeWidthEx(double sw) {
+    setState(() {
+      strokeWidth = sw;
     });
+  }
 
-    socket.on('erase_all', (_) {
-      setState(() {
-        points.clear();
-      });
+  void eraseAllEx() {
+    setState(() {
+      points.clear();
     });
+  }
 
-    socket.on('msg', (data) {
-      setState(() {
-        messages.add(data);
-        guessedUserCounter = data['guessedUserCounter'];
-      });
+  void msgEx(Map data) {
+    setState(() {
+      messages.add(data);
+      guessedUserCounter = data['guessedUserCounter'];
+    });
+    if (dataOfRoom['turn']['nick_name'] == nickName) {
       if (guessedUserCounter == (dataOfRoom['players'].length - 1)) {
-        print('idhar hain main');
         socket.emit('change_turn', dataOfRoom['room_name']);
       }
-      scrollController.animateTo(
-        scrollController.position.maxScrollExtent + 40,
-        duration: Duration(milliseconds: 200),
-        curve: Curves.easeInOut,
-      );
-    });
+    }
+    scrollController.animateTo(
+      scrollController.position.maxScrollExtent + 40,
+      duration: Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+    );
+  }
 
-    socket.on('change_turn', (data) {
-      String oldword = dataOfRoom['word'];
-      print('app changed turn called');
-      showDialog(
-          context: context,
-          builder: (context) {
-            Future.delayed(Duration(seconds: 3), () {
-              setState(() {
-                dataOfRoom = data;
-                renderHiddenTextWidget(data['word']);
-                guessedUserCounter = 0;
-                timeLeft = 60;
-                points.clear();
-                alreadyGuessedByMe = false;
-              });
-              Navigator.of(context).pop();
-              timer.cancel();
-              startTimer();
-            });
-            return AlertDialog(
-              title: Center(
-                child: Text('word was: $oldword'),
-              ),
-            );
-          });
+  void changeTurnEx(Map data) {
+    print('client change turn called');
+    String oldword = dataOfRoom['word'];
+    print(data.toString());
+    setState(() {
+      dataOfRoom = data;
+      renderHiddenTextWidget(dataOfRoom['word']);
+      guessedUserCounter = 0;
+      timeLeft = 60;
+      points.clear();
+      alreadyGuessedByMe = false;
+      timer.cancel();
+      startTimer();
     });
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('Word was : $oldword')));
+  }
 
-    socket.on('close_input', (_) {
-      socket.emit('update_score', dataOfRoom['room_name']);
-      setState(() {
-        alreadyGuessedByMe = true;
-      });
+  void closeInputEx() {
+    socket.emit('update_score', dataOfRoom['room_name']);
+    setState(() {
+      alreadyGuessedByMe = true;
     });
+  }
 
-    socket.on('update_score', (data) {
-      setState((() {
-        dataOfRoom = data;
-      }));
-    });
+  void updateScoreEx(Map data) {
+    setState((() {
+      dataOfRoom = data;
+    }));
+  }
 
-    socket.on('show_leader_board', (data) {
-      for (int i = 0; i < data['players'].length; i++) {
-        if (winnerPoints < data['players'][i]['points']) {
-          winner = data['players'][i]['nick_name'];
-          winnerPoints = data['players'][i]['points'];
-        }
+  void showLeaderBoardEx(Map data) {
+    for (int i = 0; i < data['players'].length; i++) {
+      if (winnerPoints < data['players'][i]['points']) {
+        winner = data['players'][i]['nick_name'];
+        winnerPoints = data['players'][i]['points'];
       }
-      setState(() {
-        dataOfRoom = data;
-        timer.cancel();
-        showFinalLeaderboard = true;
-        timeLeft = 0;
-      });
+    }
+    setState(() {
+      dataOfRoom = data;
+      timer.cancel();
+      showFinalLeaderboard = true;
+      timeLeft = 0;
     });
+  }
+
+  void connect() {
+    socketRepository.updateRoomListener(updateRoomEx);
+    socketRepository.pointsToDrawListener(pointsToDrawEx);
+    socketRepository.colorChangeListener(updatedColorEx);
+    socketRepository.strokeWidthListener(strokeWidthEx);
+    socketRepository.eraseAllListener(eraseAllEx);
+    socketRepository.msgListener(msgEx);
+    socketRepository.changeTurnListener(changeTurnEx);
+    socketRepository.closeInputListener(closeInputEx);
+    socketRepository.showLeaderBoardListener(showLeaderBoardEx);
 
     socket.on('user_disconnected', (data) {
       setState(() {
@@ -260,26 +261,28 @@ class _PaintScreenState extends State<PaintScreen> {
       );
     }
 
-    ;
+    final width = MediaQuery.of(context).size.width;
+    final height = MediaQuery.of(context).size.height;
 
     if (firstBuild) {
-      routeArgs =
-          ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
-      print(routeArgs.toString());
-      if (routeArgs['screen_from'] == 'create_room_screen') {
-        socket.emit('create_game', routeArgs);
-      } else {
-        socket.emit('join_game', routeArgs);
+      print('first build jsut ran');
+      connect();
+      setState(() {
+        dataOfRoom = Provider.of<RoomData>(context).dataOfRoom as Map;
+        nickName = ModalRoute.of(context)?.settings.arguments as String;
+        renderHiddenTextWidget(dataOfRoom['word']);
+      });
+      if (dataOfRoom['isJoin'] != true) {
+        startTimer();
       }
       firstBuild = false;
     }
-
-    final width = MediaQuery.of(context).size.width;
-    final height = MediaQuery.of(context).size.height;
     return Scaffold(
-      drawer: SideDrawer(
-        players_list: dataOfRoom['players'],
-      ),
+      drawer: dataOfRoom != null
+          ? SideDrawer(
+              players_list: dataOfRoom['players'],
+            )
+          : Container(),
       key: scaffoldKey,
       body: dataOfRoom != null
           ? dataOfRoom['isJoin'] != true
@@ -294,32 +297,41 @@ class _PaintScreenState extends State<PaintScreen> {
                               width: width,
                               height: height * 0.5,
                               child: GestureDetector(
-                                onPanUpdate: (details) {
-                                  print(details.localPosition.dx);
-                                  socket.emit('paint', {
-                                    'details': {
-                                      'dx': details.localPosition.dx,
-                                      'dy': details.localPosition.dy,
-                                    },
-                                    'room_name': routeArgs['room_name'],
-                                  });
-                                },
-                                onPanStart: (details) {
-                                  print(details.localPosition.dx);
-                                  socket.emit('paint', {
-                                    'details': {
-                                      'dx': details.localPosition.dx,
-                                      'dy': details.localPosition.dy,
-                                    },
-                                    'room_name': routeArgs['room_name'],
-                                  });
-                                },
-                                onPanEnd: (details) {
-                                  socket.emit('paint', {
-                                    'details': null,
-                                    'room_name': routeArgs['room_name'],
-                                  });
-                                },
+                                onPanUpdate: dataOfRoom['turn']['nick_name'] ==
+                                        nickName
+                                    ? (details) {
+                                        print(details.localPosition.dx);
+                                        socket.emit('paint', {
+                                          'details': {
+                                            'dx': details.localPosition.dx,
+                                            'dy': details.localPosition.dy,
+                                          },
+                                          'room_name': dataOfRoom['room_name'],
+                                        });
+                                      }
+                                    : (details) {},
+                                onPanStart: dataOfRoom['turn']['nick_name'] ==
+                                        nickName
+                                    ? (details) {
+                                        print(details.localPosition.dx);
+                                        socket.emit('paint', {
+                                          'details': {
+                                            'dx': details.localPosition.dx,
+                                            'dy': details.localPosition.dy,
+                                          },
+                                          'room_name': dataOfRoom['room_name'],
+                                        });
+                                      }
+                                    : (details) {},
+                                onPanEnd: dataOfRoom['turn']['nick_name'] ==
+                                        nickName
+                                    ? (details) {
+                                        socket.emit('paint', {
+                                          'details': null,
+                                          'room_name': dataOfRoom['room_name'],
+                                        });
+                                      }
+                                    : (details) {},
                                 child: SizedBox.expand(
                                   child: RepaintBoundary(
                                     child: ClipRect(
@@ -335,44 +347,53 @@ class _PaintScreenState extends State<PaintScreen> {
                                 ),
                               ),
                             ),
-                            Row(
-                              children: [
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.color_lens,
-                                    color: selectedColor,
+                            dataOfRoom['turn']['nick_name'] == nickName
+                                ? Row(
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.color_lens,
+                                          color: selectedColor,
+                                        ),
+                                        onPressed: () {
+                                          selectColor();
+                                        },
+                                      ),
+                                      Expanded(
+                                        child: Slider(
+                                          min: 1.0,
+                                          max: 10.0,
+                                          label: 'Strokewidth $strokeWidth',
+                                          value: strokeWidth,
+                                          activeColor: selectedColor,
+                                          onChanged: (double value) {
+                                            Map map = {
+                                              'value': value,
+                                              'room_name':
+                                                  dataOfRoom['room_name'],
+                                            };
+                                            socket.emit('stroke_width', map);
+                                          },
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () {
+                                          socket.emit('erase_all',
+                                              dataOfRoom['room_name']);
+                                        },
+                                        icon: const Icon(Icons.clear_all),
+                                      )
+                                    ],
+                                  )
+                                : Center(
+                                    child: Text(
+                                      "${dataOfRoom["turn"]["nick_name"]} is drawing..",
+                                      style: const TextStyle(
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.bold),
+                                    ),
                                   ),
-                                  onPressed: () {
-                                    selectColor();
-                                  },
-                                ),
-                                Expanded(
-                                  child: Slider(
-                                    min: 1.0,
-                                    max: 10.0,
-                                    label: 'Strokewidth $strokeWidth',
-                                    value: strokeWidth,
-                                    activeColor: selectedColor,
-                                    onChanged: (double value) {
-                                      Map map = {
-                                        'value': value,
-                                        'room_name': dataOfRoom['room_name'],
-                                      };
-                                      socket.emit('stroke_width', map);
-                                    },
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () {
-                                    socket.emit(
-                                        'erase_all', dataOfRoom['room_name']);
-                                  },
-                                  icon: const Icon(Icons.clear_all),
-                                )
-                              ],
-                            ),
-                            dataOfRoom['turn']['nick_name'] !=
-                                    routeArgs['nick_name']
+                            dataOfRoom['turn']['nick_name'] != nickName
                                 ? Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: hiddenTextWidget,
@@ -388,6 +409,7 @@ class _PaintScreenState extends State<PaintScreen> {
                               child: ListView.builder(
                                 itemBuilder: (context, index) {
                                   return ListTile(
+                                    // ignore: prefer_const_constructors
                                     title: Text(
                                       messages[index]["sender_name"],
                                       style: const TextStyle(
@@ -410,8 +432,7 @@ class _PaintScreenState extends State<PaintScreen> {
                             ),
                           ],
                         ),
-                        dataOfRoom['turn']['nick_name'] !=
-                                routeArgs['nick_name']
+                        dataOfRoom['turn']['nick_name'] != nickName
                             ? Align(
                                 alignment: Alignment.bottomCenter,
                                 child: Container(
@@ -423,7 +444,7 @@ class _PaintScreenState extends State<PaintScreen> {
                                     onSubmitted: ((value) {
                                       if (value.trim().isNotEmpty) {
                                         Map msgMap = {
-                                          'sender_name': routeArgs["nick_name"],
+                                          'sender_name': nickName,
                                           'message': value.trim(),
                                           'word': dataOfRoom["word"],
                                           'room_name': dataOfRoom["room_name"],

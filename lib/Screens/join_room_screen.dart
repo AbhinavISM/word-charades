@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:yayscribbl/socket_repository.dart';
 
+import '../room_data.dart';
 import '../widgets/text_input_widget.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class JoinRoomScreen extends StatefulWidget {
   const JoinRoomScreen({super.key});
@@ -14,18 +18,37 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
 
   final TextEditingController _roomController = TextEditingController();
 
+  late IO.Socket socket;
+  bool showProgressBar = false;
+  late RoomData roomData;
+  late SocketRepository socketRepository;
+
   void joinRoom() {
     if (_nameController.text.isNotEmpty && _roomController.text.isNotEmpty) {
-      Navigator.of(context).pushNamed('/paint_screen', arguments: {
+      setState(() {
+        showProgressBar = true;
+      });
+      socketRepository.joinGame({
         "nick_name": _nameController.text,
         "room_name": _roomController.text,
         "screen_from": 'join_room_screen',
       });
+      socketRepository.updateRoomListener(updateRoomUI);
     }
+  }
+
+  void updateRoomUI(Map dataOfRoom) {
+    showProgressBar = false;
+    roomData.updateDataOfRoom(dataOfRoom);
+    // print(Provider.of<RoomData>(context).dataOfRoom.toString());
+    Navigator.of(context)
+        .pushNamed('/paint_screen', arguments: _nameController.text);
   }
 
   @override
   Widget build(BuildContext context) {
+    roomData = Provider.of<RoomData>(context);
+    socketRepository = Provider.of<SocketRepository>(context);
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
