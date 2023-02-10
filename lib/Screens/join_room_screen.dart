@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:yayscribbl/socket_repository.dart';
 
-import '../room_data.dart';
+import '../vm_ps.dart';
 import '../widgets/text_input_widget.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -50,47 +50,63 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
     roomData = Provider.of<RoomData>(context);
     socketRepository = Provider.of<SocketRepository>(context);
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            "Join Room",
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 24,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.fromRGBO(41, 30, 83, 1),
+                Color.fromRGBO(143, 34, 210, 1)
+              ]),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              "Join Room",
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 24,
+              ),
             ),
-          ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.05),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextInputWidget(
-                controller: _nameController, texthint: "Enter your name"),
-          ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.025),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextInputWidget(
-                controller: _roomController, texthint: "Enter room name"),
-          ),
-          SizedBox(height: MediaQuery.of(context).size.height * 0.05),
-          ElevatedButton(
-            onPressed: () {
-              joinRoom();
-            },
-            style: ButtonStyle(
-              minimumSize: MaterialStateProperty.all(
-                Size(
-                  MediaQuery.of(context).size.width / 3,
-                  MediaQuery.of(context).size.height * 0.05,
+            SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextInputWidget(
+                  controller: _nameController, texthint: "Enter your name"),
+            ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.025),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextInputWidget(
+                  controller: _roomController, texthint: "Enter room name"),
+            ),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+            ClipRRect(
+              borderRadius: BorderRadius.all(Radius.circular(16)),
+              child: ElevatedButton(
+                onPressed: () {
+                  joinRoom();
+                },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(
+                      const Color.fromRGBO(111, 0, 244, 1)),
+                  minimumSize: MaterialStateProperty.all(
+                    Size(
+                      MediaQuery.of(context).size.width / 3,
+                      MediaQuery.of(context).size.height * 0.075,
+                    ),
+                  ),
+                ),
+                child: const Text(
+                  "Join!",
+                  style: TextStyle(fontSize: 16),
                 ),
               ),
             ),
-            child: const Text(
-              "Join!",
-              style: TextStyle(fontSize: 16),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

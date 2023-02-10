@@ -5,7 +5,7 @@ import 'package:yayscribbl/Screens/home_screen.dart';
 import 'package:yayscribbl/Screens/join_room_screen.dart';
 import 'package:yayscribbl/Screens/paint_screen.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:yayscribbl/room_data.dart';
+import 'package:yayscribbl/vm_ps.dart';
 import 'package:yayscribbl/socket_client.dart';
 import 'package:yayscribbl/socket_repository.dart';
 

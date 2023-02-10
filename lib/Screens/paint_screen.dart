@@ -8,7 +8,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:yayscribbl/Screens/final_leader_board.dart';
 import 'package:yayscribbl/Screens/waiting_screen.dart';
 import 'package:yayscribbl/models/touch_points.dart';
-import 'package:yayscribbl/room_data.dart';
+import 'package:yayscribbl/vm_ps.dart';
 import 'package:yayscribbl/socket_client.dart';
 import 'package:yayscribbl/socket_repository.dart';
 
@@ -66,6 +66,7 @@ class _PaintScreenState extends State<PaintScreen> {
   void dispose() {
     socket.dispose();
     timer.cancel();
+    Provider.of<RoomData>(context).updateDataOfRoom(null);
     super.dispose();
   }
 
