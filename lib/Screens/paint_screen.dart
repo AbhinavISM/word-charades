@@ -26,7 +26,8 @@ class PaintScreen extends StatefulWidget {
 class _PaintScreenState extends State<PaintScreen> {
   late IO.Socket socket;
   late SocketRepository socketRepository;
-  late Map dataOfRoom;
+  // late Map dataOfRoom;
+  late RoomData vmPs;
   late bool firstBuild;
   // late final dynamic routeArgs;
   late String nickName;
@@ -66,14 +67,14 @@ class _PaintScreenState extends State<PaintScreen> {
   void dispose() {
     socket.dispose();
     timer.cancel();
-    Provider.of<RoomData>(context).updateDataOfRoom(null);
+    vmPs.updateDataOfRoom(null);
     super.dispose();
   }
 
   void startTimer() {
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (timeLeft == 0) {
-        socket.emit('change_turn', dataOfRoom['room_name']);
+        socket.emit('change_turn', vmPs.dataOfRoom?['room_name']);
         setState(() {
           timer.cancel();
         });
@@ -97,7 +98,7 @@ class _PaintScreenState extends State<PaintScreen> {
 
   void updateRoomEx(Map roomData) {
     setState(() {
-      dataOfRoom = roomData;
+      vmPs.updateDataOfRoom(roomData);
       renderHiddenTextWidget(roomData['word']);
     });
     if (roomData['isJoin'] != true) {
@@ -144,9 +145,9 @@ class _PaintScreenState extends State<PaintScreen> {
       messages.add(data);
       guessedUserCounter = data['guessedUserCounter'];
     });
-    if (dataOfRoom['turn']['nick_name'] == nickName) {
-      if (guessedUserCounter == (dataOfRoom['players'].length - 1)) {
-        socket.emit('change_turn', dataOfRoom['room_name']);
+    if (vmPs.dataOfRoom?['turn']['nick_name'] == nickName) {
+      if (guessedUserCounter == (vmPs.dataOfRoom?['players'].length - 1)) {
+        socket.emit('change_turn', vmPs.dataOfRoom?['room_name']);
       }
     }
     scrollController.animateTo(
@@ -158,11 +159,11 @@ class _PaintScreenState extends State<PaintScreen> {
 
   void changeTurnEx(Map data) {
     print('client change turn called');
-    String oldword = dataOfRoom['word'];
+    String oldword = vmPs.dataOfRoom?['word'];
     print(data.toString());
     setState(() {
-      dataOfRoom = data;
-      renderHiddenTextWidget(dataOfRoom['word']);
+      vmPs.updateDataOfRoom(data);
+      renderHiddenTextWidget(vmPs.dataOfRoom?['word']);
       guessedUserCounter = 0;
       timeLeft = 60;
       points.clear();
@@ -175,7 +176,7 @@ class _PaintScreenState extends State<PaintScreen> {
   }
 
   void closeInputEx() {
-    socket.emit('update_score', dataOfRoom['room_name']);
+    socket.emit('update_score', vmPs.dataOfRoom?['room_name']);
     setState(() {
       alreadyGuessedByMe = true;
     });
@@ -183,7 +184,7 @@ class _PaintScreenState extends State<PaintScreen> {
 
   void updateScoreEx(Map data) {
     setState((() {
-      dataOfRoom = data;
+      vmPs.updateDataOfRoom(data);
     }));
   }
 
@@ -195,7 +196,7 @@ class _PaintScreenState extends State<PaintScreen> {
       }
     }
     setState(() {
-      dataOfRoom = data;
+      vmPs.updateDataOfRoom(data);
       timer.cancel();
       showFinalLeaderboard = true;
       timeLeft = 0;
@@ -215,7 +216,7 @@ class _PaintScreenState extends State<PaintScreen> {
 
     socket.on('user_disconnected', (data) {
       setState(() {
-        dataOfRoom = data;
+        vmPs.updateDataOfRoom(data);
       });
     });
 
@@ -244,7 +245,7 @@ class _PaintScreenState extends State<PaintScreen> {
                         colorString.split('(0x')[1].split(')')[0];
                     Map map = {
                       'color': valueString,
-                      'room_name': dataOfRoom['room_name']
+                      'room_name': vmPs.dataOfRoom?['room_name']
                     };
                     socket.emit('color_change', map);
                   }),
@@ -264,29 +265,30 @@ class _PaintScreenState extends State<PaintScreen> {
 
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
+    vmPs = Provider.of<RoomData>(context);
 
     if (firstBuild) {
       print('first build jsut ran');
       connect();
       setState(() {
-        dataOfRoom = Provider.of<RoomData>(context).dataOfRoom as Map;
+        // dataOfRoom = Provider.of<RoomData>(context).dataOfRoom as Map;
         nickName = ModalRoute.of(context)?.settings.arguments as String;
-        renderHiddenTextWidget(dataOfRoom['word']);
+        renderHiddenTextWidget(vmPs.dataOfRoom?['word']);
       });
-      if (dataOfRoom['isJoin'] != true) {
+      if (vmPs.dataOfRoom?['isJoin'] != true) {
         startTimer();
       }
       firstBuild = false;
     }
     return Scaffold(
-      drawer: dataOfRoom != null
+      drawer: vmPs.dataOfRoom != null
           ? SideDrawer(
-              players_list: dataOfRoom['players'],
+              players_list: vmPs.dataOfRoom?['players'],
             )
           : Container(),
       key: scaffoldKey,
-      body: dataOfRoom != null
-          ? dataOfRoom['isJoin'] != true
+      body: vmPs.dataOfRoom != null
+          ? vmPs.dataOfRoom!['isJoin'] != true
               ? !showFinalLeaderboard
                   ? Stack(
                       children: [
@@ -298,7 +300,8 @@ class _PaintScreenState extends State<PaintScreen> {
                               width: width,
                               height: height * 0.5,
                               child: GestureDetector(
-                                onPanUpdate: dataOfRoom['turn']['nick_name'] ==
+                                onPanUpdate: vmPs.dataOfRoom?['turn']
+                                            ['nick_name'] ==
                                         nickName
                                     ? (details) {
                                         print(details.localPosition.dx);
@@ -307,11 +310,13 @@ class _PaintScreenState extends State<PaintScreen> {
                                             'dx': details.localPosition.dx,
                                             'dy': details.localPosition.dy,
                                           },
-                                          'room_name': dataOfRoom['room_name'],
+                                          'room_name':
+                                              vmPs.dataOfRoom?['room_name'],
                                         });
                                       }
                                     : (details) {},
-                                onPanStart: dataOfRoom['turn']['nick_name'] ==
+                                onPanStart: vmPs.dataOfRoom?['turn']
+                                            ['nick_name'] ==
                                         nickName
                                     ? (details) {
                                         print(details.localPosition.dx);
@@ -320,16 +325,19 @@ class _PaintScreenState extends State<PaintScreen> {
                                             'dx': details.localPosition.dx,
                                             'dy': details.localPosition.dy,
                                           },
-                                          'room_name': dataOfRoom['room_name'],
+                                          'room_name':
+                                              vmPs.dataOfRoom?['room_name'],
                                         });
                                       }
                                     : (details) {},
-                                onPanEnd: dataOfRoom['turn']['nick_name'] ==
+                                onPanEnd: vmPs.dataOfRoom?['turn']
+                                            ['nick_name'] ==
                                         nickName
                                     ? (details) {
                                         socket.emit('paint', {
                                           'details': null,
-                                          'room_name': dataOfRoom['room_name'],
+                                          'room_name':
+                                              vmPs.dataOfRoom?['room_name'],
                                         });
                                       }
                                     : (details) {},
@@ -348,7 +356,7 @@ class _PaintScreenState extends State<PaintScreen> {
                                 ),
                               ),
                             ),
-                            dataOfRoom['turn']['nick_name'] == nickName
+                            vmPs.dataOfRoom?['turn']['nick_name'] == nickName
                                 ? Row(
                                     children: [
                                       IconButton(
@@ -371,7 +379,7 @@ class _PaintScreenState extends State<PaintScreen> {
                                             Map map = {
                                               'value': value,
                                               'room_name':
-                                                  dataOfRoom['room_name'],
+                                                  vmPs.dataOfRoom?['room_name'],
                                             };
                                             socket.emit('stroke_width', map);
                                           },
@@ -380,7 +388,7 @@ class _PaintScreenState extends State<PaintScreen> {
                                       IconButton(
                                         onPressed: () {
                                           socket.emit('erase_all',
-                                              dataOfRoom['room_name']);
+                                              vmPs.dataOfRoom?['room_name']);
                                         },
                                         icon: const Icon(Icons.clear_all),
                                       )
@@ -388,20 +396,20 @@ class _PaintScreenState extends State<PaintScreen> {
                                   )
                                 : Center(
                                     child: Text(
-                                      "${dataOfRoom["turn"]["nick_name"]} is drawing..",
+                                      "${vmPs.dataOfRoom?["turn"]["nick_name"]} is drawing..",
                                       style: const TextStyle(
                                           fontSize: 17,
                                           fontWeight: FontWeight.bold),
                                     ),
                                   ),
-                            dataOfRoom['turn']['nick_name'] != nickName
+                            vmPs.dataOfRoom?['turn']['nick_name'] != nickName
                                 ? Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: hiddenTextWidget,
                                   )
                                 : Center(
                                     child: Text(
-                                      dataOfRoom['word'],
+                                      vmPs.dataOfRoom?['word'],
                                       style: const TextStyle(fontSize: 16),
                                     ),
                                   ),
@@ -433,7 +441,7 @@ class _PaintScreenState extends State<PaintScreen> {
                             ),
                           ],
                         ),
-                        dataOfRoom['turn']['nick_name'] != nickName
+                        vmPs.dataOfRoom?['turn']['nick_name'] != nickName
                             ? Align(
                                 alignment: Alignment.bottomCenter,
                                 child: Container(
@@ -447,8 +455,9 @@ class _PaintScreenState extends State<PaintScreen> {
                                         Map msgMap = {
                                           'sender_name': nickName,
                                           'message': value.trim(),
-                                          'word': dataOfRoom["word"],
-                                          'room_name': dataOfRoom["room_name"],
+                                          'word': vmPs.dataOfRoom?["word"],
+                                          'room_name':
+                                              vmPs.dataOfRoom?["room_name"],
                                           'guessedUserCounter':
                                               guessedUserCounter,
                                           'total_time': 60,
@@ -484,12 +493,12 @@ class _PaintScreenState extends State<PaintScreen> {
                         ),
                       ],
                     )
-                  : FinalLeaderBoard(players_list: dataOfRoom['players'])
+                  : FinalLeaderBoard(players_list: vmPs.dataOfRoom?['players'])
               : WaitingScreen(
-                  room_name: dataOfRoom['room_name'],
-                  current_room_size: dataOfRoom['players'].length,
-                  room_size: dataOfRoom['room_size'],
-                  players_list: dataOfRoom['players'],
+                  room_name: vmPs.dataOfRoom?['room_name'],
+                  current_room_size: vmPs.dataOfRoom?['players'].length,
+                  room_size: vmPs.dataOfRoom?['room_size'],
+                  players_list: vmPs.dataOfRoom?['players'],
                 )
           : const Center(
               child: CircularProgressIndicator(),
