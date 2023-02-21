@@ -5,7 +5,8 @@ import 'package:yayscribbl/Screens/home_screen.dart';
 import 'package:yayscribbl/Screens/join_room_screen.dart';
 import 'package:yayscribbl/Screens/paint_screen.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:yayscribbl/vm_ps.dart';
+import 'package:yayscribbl/paint_screen_vm.dart';
+import 'package:yayscribbl/room_data_provider.dart';
 import 'package:yayscribbl/socket_client.dart';
 import 'package:yayscribbl/socket_repository.dart';
 
@@ -20,25 +21,28 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => RoomData(),
-      child: MultiProvider(
-        providers: [
-          Provider(
-            create: (context) => SocketRepository(),
-          )
-        ],
-        child: MaterialApp(
-            title: 'Flutter Demo',
-            theme: ThemeData(
-              // primaryColor: const Color.fromARGB(255, 84, 9, 163),
-              primarySwatch: Colors.deepOrange,
-            ),
-            home: const MyHomePage(),
-            routes: {
-              '/create_room_screen': (ctx) => CreateRoomScreen(),
-              '/join_room_screen': (ctx) => JoinRoomScreen(),
-              '/paint_screen': (context) => PaintScreen(),
-            }),
+      create: (context) => PaintScreenVM(),
+      child: ChangeNotifierProvider(
+        create: (context) => RoomData(),
+        child: MultiProvider(
+          providers: [
+            Provider(
+              create: (context) => SocketRepository(),
+            )
+          ],
+          child: MaterialApp(
+              title: 'Flutter Demo',
+              theme: ThemeData(
+                // primaryColor: const Color.fromARGB(255, 84, 9, 163),
+                primarySwatch: Colors.deepOrange,
+              ),
+              home: const MyHomePage(),
+              routes: {
+                '/create_room_screen': (ctx) => CreateRoomScreen(),
+                '/join_room_screen': (ctx) => JoinRoomScreen(),
+                '/paint_screen': (context) => PaintScreen(),
+              }),
+        ),
       ),
     );
   }

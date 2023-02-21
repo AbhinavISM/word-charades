@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:yayscribbl/vm_ps.dart';
+import 'package:yayscribbl/room_data_provider.dart';
 import 'package:yayscribbl/socket_repository.dart';
 import 'package:yayscribbl/widgets/text_input_widget.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;

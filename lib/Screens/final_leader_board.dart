@@ -1,7 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/container.dart';
-import 'package:flutter/src/widgets/framework.dart';
+import 'package:yayscribbl/Screens/home_screen.dart';
 
 class FinalLeaderBoard extends StatelessWidget {
   final List players_list;
@@ -30,6 +28,14 @@ class FinalLeaderBoard extends StatelessWidget {
               }),
               itemCount: players_list.length,
             ),
+            TextButton(
+                onPressed: () {
+                  Navigator.pushAndRemoveUntil(context,
+                      MaterialPageRoute(builder: (BuildContext context) {
+                    return MyHomePage();
+                  }), (route) => false);
+                },
+                child: Text('New Game')),
           ],
         ),
       ),
