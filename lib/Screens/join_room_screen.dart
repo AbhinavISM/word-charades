@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+// import 'package:provider/provider.dart';
+import 'package:yayscribbl/main.dart';
 import 'package:yayscribbl/socket_repository.dart';
 
 import '../room_data_provider.dart';
 import '../widgets/text_input_widget.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
-class JoinRoomScreen extends StatefulWidget {
+class JoinRoomScreen extends ConsumerStatefulWidget {
   const JoinRoomScreen({super.key});
 
   @override
-  State<JoinRoomScreen> createState() => _JoinRoomScreenState();
+  ConsumerState<JoinRoomScreen> createState() => _JoinRoomScreenState();
 }
 
-class _JoinRoomScreenState extends State<JoinRoomScreen> {
+class _JoinRoomScreenState extends ConsumerState<JoinRoomScreen> {
   final TextEditingController _nameController = TextEditingController();
 
   final TextEditingController _roomController = TextEditingController();
@@ -47,8 +49,8 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
-    roomData = Provider.of<RoomData>(context);
-    socketRepository = Provider.of<SocketRepository>(context);
+    roomData = ref.watch(roomDataProvider);
+    socketRepository = ref.read(socketRepositoryProvider);
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(

@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+// import 'package:provider/provider.dart';
 
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:yayscribbl/Screens/final_leader_board.dart';
 import 'package:yayscribbl/Screens/waiting_screen.dart';
+import 'package:yayscribbl/main.dart';
 import 'package:yayscribbl/models/touch_points.dart';
 import 'package:yayscribbl/paint_screen_vm.dart';
 import 'package:yayscribbl/room_data_provider.dart';
@@ -17,14 +19,14 @@ import '../models/my_custom_painter.dart';
 import '../widgets/my_clipper.dart';
 import '../widgets/side_drawer.dart';
 
-class PaintScreen extends StatefulWidget {
+class PaintScreen extends ConsumerStatefulWidget {
   const PaintScreen({super.key});
 
   @override
-  State<PaintScreen> createState() => _PaintScreenState();
+  ConsumerState<PaintScreen> createState() => _PaintScreenState();
 }
 
-class _PaintScreenState extends State<PaintScreen> {
+class _PaintScreenState extends ConsumerState<PaintScreen> {
   late IO.Socket socket;
   late SocketRepository socketRepository;
   // late Map dataOfRoom;
@@ -59,7 +61,7 @@ class _PaintScreenState extends State<PaintScreen> {
 
   @override
   void didChangeDependencies() {
-    socketRepository = Provider.of<SocketRepository>(context);
+    socketRepository = ref.read(socketRepositoryProvider);
     socket = socketRepository.socket!;
     super.didChangeDependencies();
   }
@@ -268,13 +270,13 @@ class _PaintScreenState extends State<PaintScreen> {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-    paintScreenVM = Provider.of<PaintScreenVM>(context);
+    paintScreenVM = ref.watch(paintScreenVMprovider);
 
     if (paintScreenVM.firstBuild) {
       print('first build just ran');
       connect();
       setState(() {
-        paintScreenVM.dataOfRoom = Provider.of<RoomData>(context).dataOfRoom;
+        paintScreenVM.dataOfRoom = ref.read(roomDataProvider).dataOfRoom;
         nickName = ModalRoute.of(context)?.settings.arguments as String;
         renderHiddenTextWidget(paintScreenVM.dataOfRoom?['word']);
       });
