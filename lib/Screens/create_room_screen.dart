@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yayscribbl/create_room_vm.dart';
 import 'package:yayscribbl/main.dart';
 // import 'package:provider/provider.dart';
 import 'package:yayscribbl/room_data_provider.dart';
@@ -16,20 +17,13 @@ class CreateRoomScreen extends ConsumerStatefulWidget {
 
 class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
   final TextEditingController _nameController = TextEditingController();
-
   final TextEditingController _roomController = TextEditingController();
-
   String? _maxRounds;
-
   String? _roomSize;
-
   late IO.Socket socket;
-
   bool showProgressBar = false;
-
-  late RoomData roomData;
-
   late SocketRepository socketRepository;
+  late CreateRoomVM createRoomVM;
 
   void createRoom() {
     if (_nameController.text.isNotEmpty &&
@@ -53,7 +47,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
 
   void updateRoomUI(Map dataOfRoom) {
     showProgressBar = false;
-    roomData.updateDataOfRoom(dataOfRoom);
+    createRoomVM.roomData.updateDataOfRoom(dataOfRoom);
     // print(Provider.of<RoomData>(context).dataOfRoom.toString());
     Navigator.of(context)
         .pushNamed('/paint_screen', arguments: _nameController.text);
@@ -61,7 +55,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
-    roomData = ref.watch(roomDataProvider);
+    createRoomVM = ref.watch(createRoomVMprovider);
     socketRepository = ref.read(socketRepositoryProvider);
     return Scaffold(
       body: showProgressBar
