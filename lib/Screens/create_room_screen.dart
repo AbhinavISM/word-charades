@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:yayscribbl/vm_ps.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yayscribbl/main.dart';
+// import 'package:provider/provider.dart';
+import 'package:yayscribbl/room_data_provider.dart';
 import 'package:yayscribbl/socket_repository.dart';
 import 'package:yayscribbl/widgets/text_input_widget.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
-class CreateRoomScreen extends StatefulWidget {
+class CreateRoomScreen extends ConsumerStatefulWidget {
   CreateRoomScreen({super.key});
 
   @override
-  State<CreateRoomScreen> createState() => _CreateRoomScreenState();
+  ConsumerState<CreateRoomScreen> createState() => _CreateRoomScreenState();
 }
 
-class _CreateRoomScreenState extends State<CreateRoomScreen> {
+class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
   final TextEditingController _nameController = TextEditingController();
 
   final TextEditingController _roomController = TextEditingController();
@@ -59,8 +61,8 @@ class _CreateRoomScreenState extends State<CreateRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
-    roomData = Provider.of<RoomData>(context);
-    socketRepository = Provider.of<SocketRepository>(context);
+    roomData = ref.watch(roomDataProvider);
+    socketRepository = ref.read(socketRepositoryProvider);
     return Scaffold(
       body: showProgressBar
           ? const Center(child: CircularProgressIndicator())

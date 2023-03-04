@@ -2,13 +2,16 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+// import 'package:provider/provider.dart';
 
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:yayscribbl/Screens/final_leader_board.dart';
 import 'package:yayscribbl/Screens/waiting_screen.dart';
+import 'package:yayscribbl/main.dart';
 import 'package:yayscribbl/models/touch_points.dart';
-import 'package:yayscribbl/vm_ps.dart';
+import 'package:yayscribbl/paint_screen_vm.dart';
+import 'package:yayscribbl/room_data_provider.dart';
 import 'package:yayscribbl/socket_client.dart';
 import 'package:yayscribbl/socket_repository.dart';
 
@@ -16,19 +19,19 @@ import '../models/my_custom_painter.dart';
 import '../widgets/my_clipper.dart';
 import '../widgets/side_drawer.dart';
 
-class PaintScreen extends StatefulWidget {
+class PaintScreen extends ConsumerStatefulWidget {
   const PaintScreen({super.key});
 
   @override
-  State<PaintScreen> createState() => _PaintScreenState();
+  ConsumerState<PaintScreen> createState() => _PaintScreenState();
 }
 
-class _PaintScreenState extends State<PaintScreen> {
+class _PaintScreenState extends ConsumerState<PaintScreen> {
   late IO.Socket socket;
   late SocketRepository socketRepository;
   // late Map dataOfRoom;
-  late RoomData vmPs;
-  late bool firstBuild;
+  late PaintScreenVM paintScreenVM;
+  // late bool firstBuild;
   // late final dynamic routeArgs;
   late String nickName;
   List<TouchPoints> points = [];
@@ -51,30 +54,31 @@ class _PaintScreenState extends State<PaintScreen> {
 
   @override
   void initState() {
-    firstBuild = true;
+    // firstBuild = true;
     print('init state ran');
     super.initState();
   }
 
   @override
   void didChangeDependencies() {
-    socketRepository = Provider.of<SocketRepository>(context);
+    socketRepository = ref.read(socketRepositoryProvider);
     socket = socketRepository.socket!;
     super.didChangeDependencies();
   }
 
   @override
   void dispose() {
-    socket.dispose();
+    // socket.dispose();
+    paintScreenVM.firstBuild = true;
     timer.cancel();
-    vmPs.updateDataOfRoom(null);
+    paintScreenVM.updateDataOfRoom(null);
     super.dispose();
   }
 
   void startTimer() {
     timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (timeLeft == 0) {
-        socket.emit('change_turn', vmPs.dataOfRoom?['room_name']);
+        socket.emit('change_turn', paintScreenVM.dataOfRoom?['room_name']);
         setState(() {
           timer.cancel();
         });
@@ -98,7 +102,7 @@ class _PaintScreenState extends State<PaintScreen> {
 
   void updateRoomEx(Map roomData) {
     setState(() {
-      vmPs.updateDataOfRoom(roomData);
+      paintScreenVM.updateDataOfRoom(roomData);
       renderHiddenTextWidget(roomData['word']);
     });
     if (roomData['isJoin'] != true) {
@@ -145,9 +149,10 @@ class _PaintScreenState extends State<PaintScreen> {
       messages.add(data);
       guessedUserCounter = data['guessedUserCounter'];
     });
-    if (vmPs.dataOfRoom?['turn']['nick_name'] == nickName) {
-      if (guessedUserCounter == (vmPs.dataOfRoom?['players'].length - 1)) {
-        socket.emit('change_turn', vmPs.dataOfRoom?['room_name']);
+    if (paintScreenVM.dataOfRoom?['turn']['nick_name'] == nickName) {
+      if (guessedUserCounter ==
+          (paintScreenVM.dataOfRoom?['players'].length - 1)) {
+        socket.emit('change_turn', paintScreenVM.dataOfRoom?['room_name']);
       }
     }
     scrollController.animateTo(
@@ -159,11 +164,11 @@ class _PaintScreenState extends State<PaintScreen> {
 
   void changeTurnEx(Map data) {
     print('client change turn called');
-    String oldword = vmPs.dataOfRoom?['word'];
+    String oldword = paintScreenVM.dataOfRoom?['word'];
     print(data.toString());
     setState(() {
-      vmPs.updateDataOfRoom(data);
-      renderHiddenTextWidget(vmPs.dataOfRoom?['word']);
+      paintScreenVM.updateDataOfRoom(data);
+      renderHiddenTextWidget(paintScreenVM.dataOfRoom?['word']);
       guessedUserCounter = 0;
       timeLeft = 60;
       points.clear();
@@ -176,7 +181,7 @@ class _PaintScreenState extends State<PaintScreen> {
   }
 
   void closeInputEx() {
-    socket.emit('update_score', vmPs.dataOfRoom?['room_name']);
+    socket.emit('update_score', paintScreenVM.dataOfRoom?['room_name']);
     setState(() {
       alreadyGuessedByMe = true;
     });
@@ -184,7 +189,7 @@ class _PaintScreenState extends State<PaintScreen> {
 
   void updateScoreEx(Map data) {
     setState((() {
-      vmPs.updateDataOfRoom(data);
+      paintScreenVM.updateDataOfRoom(data);
     }));
   }
 
@@ -196,7 +201,7 @@ class _PaintScreenState extends State<PaintScreen> {
       }
     }
     setState(() {
-      vmPs.updateDataOfRoom(data);
+      paintScreenVM.updateDataOfRoom(data);
       timer.cancel();
       showFinalLeaderboard = true;
       timeLeft = 0;
@@ -216,7 +221,7 @@ class _PaintScreenState extends State<PaintScreen> {
 
     socket.on('user_disconnected', (data) {
       setState(() {
-        vmPs.updateDataOfRoom(data);
+        paintScreenVM.updateDataOfRoom(data);
       });
     });
 
@@ -229,66 +234,67 @@ class _PaintScreenState extends State<PaintScreen> {
     socket.onConnectError((data) => print(data.toString()));
   }
 
+  void selectColor() {
+    showDialog(
+      context: context,
+      builder: ((context) => AlertDialog(
+            title: const Text('Choose Color'),
+            content: SingleChildScrollView(
+              child: BlockPicker(
+                pickerColor: selectedColor,
+                onColorChanged: ((color) {
+                  String colorString = color.toString();
+                  String valueString =
+                      colorString.split('(0x')[1].split(')')[0];
+                  Map map = {
+                    'color': valueString,
+                    'room_name': paintScreenVM.dataOfRoom?['room_name']
+                  };
+                  socket.emit('color_change', map);
+                }),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Close'),
+              )
+            ],
+          )),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    void selectColor() {
-      showDialog(
-        context: context,
-        builder: ((context) => AlertDialog(
-              title: const Text('Choose Color'),
-              content: SingleChildScrollView(
-                child: BlockPicker(
-                  pickerColor: selectedColor,
-                  onColorChanged: ((color) {
-                    String colorString = color.toString();
-                    String valueString =
-                        colorString.split('(0x')[1].split(')')[0];
-                    Map map = {
-                      'color': valueString,
-                      'room_name': vmPs.dataOfRoom?['room_name']
-                    };
-                    socket.emit('color_change', map);
-                  }),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Close'),
-                )
-              ],
-            )),
-      );
-    }
-
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-    vmPs = Provider.of<RoomData>(context);
+    paintScreenVM = ref.watch(paintScreenVMprovider);
 
-    if (firstBuild) {
-      print('first build jsut ran');
+    if (paintScreenVM.firstBuild) {
+      print('first build just ran');
       connect();
       setState(() {
-        // dataOfRoom = Provider.of<RoomData>(context).dataOfRoom as Map;
+        paintScreenVM.dataOfRoom = ref.read(roomDataProvider).dataOfRoom;
         nickName = ModalRoute.of(context)?.settings.arguments as String;
-        renderHiddenTextWidget(vmPs.dataOfRoom?['word']);
+        renderHiddenTextWidget(paintScreenVM.dataOfRoom?['word']);
       });
-      if (vmPs.dataOfRoom?['isJoin'] != true) {
+      if (paintScreenVM.dataOfRoom?['isJoin'] != true) {
         startTimer();
       }
-      firstBuild = false;
+      paintScreenVM.firstBuild = false;
     }
+
     return Scaffold(
-      drawer: vmPs.dataOfRoom != null
+      drawer: paintScreenVM.dataOfRoom != null
           ? SideDrawer(
-              players_list: vmPs.dataOfRoom?['players'],
+              players_list: paintScreenVM.dataOfRoom?['players'],
             )
           : Container(),
       key: scaffoldKey,
-      body: vmPs.dataOfRoom != null
-          ? vmPs.dataOfRoom!['isJoin'] != true
+      body: paintScreenVM.dataOfRoom != null
+          ? paintScreenVM.dataOfRoom!['isJoin'] != true
               ? !showFinalLeaderboard
                   ? Stack(
                       children: [
@@ -300,7 +306,7 @@ class _PaintScreenState extends State<PaintScreen> {
                               width: width,
                               height: height * 0.5,
                               child: GestureDetector(
-                                onPanUpdate: vmPs.dataOfRoom?['turn']
+                                onPanUpdate: paintScreenVM.dataOfRoom?['turn']
                                             ['nick_name'] ==
                                         nickName
                                     ? (details) {
@@ -310,12 +316,12 @@ class _PaintScreenState extends State<PaintScreen> {
                                             'dx': details.localPosition.dx,
                                             'dy': details.localPosition.dy,
                                           },
-                                          'room_name':
-                                              vmPs.dataOfRoom?['room_name'],
+                                          'room_name': paintScreenVM
+                                              .dataOfRoom?['room_name'],
                                         });
                                       }
                                     : (details) {},
-                                onPanStart: vmPs.dataOfRoom?['turn']
+                                onPanStart: paintScreenVM.dataOfRoom?['turn']
                                             ['nick_name'] ==
                                         nickName
                                     ? (details) {
@@ -325,19 +331,19 @@ class _PaintScreenState extends State<PaintScreen> {
                                             'dx': details.localPosition.dx,
                                             'dy': details.localPosition.dy,
                                           },
-                                          'room_name':
-                                              vmPs.dataOfRoom?['room_name'],
+                                          'room_name': paintScreenVM
+                                              .dataOfRoom?['room_name'],
                                         });
                                       }
                                     : (details) {},
-                                onPanEnd: vmPs.dataOfRoom?['turn']
+                                onPanEnd: paintScreenVM.dataOfRoom?['turn']
                                             ['nick_name'] ==
                                         nickName
                                     ? (details) {
                                         socket.emit('paint', {
                                           'details': null,
-                                          'room_name':
-                                              vmPs.dataOfRoom?['room_name'],
+                                          'room_name': paintScreenVM
+                                              .dataOfRoom?['room_name'],
                                         });
                                       }
                                     : (details) {},
@@ -356,7 +362,8 @@ class _PaintScreenState extends State<PaintScreen> {
                                 ),
                               ),
                             ),
-                            vmPs.dataOfRoom?['turn']['nick_name'] == nickName
+                            paintScreenVM.dataOfRoom?['turn']['nick_name'] ==
+                                    nickName
                                 ? Row(
                                     children: [
                                       IconButton(
@@ -378,8 +385,8 @@ class _PaintScreenState extends State<PaintScreen> {
                                           onChanged: (double value) {
                                             Map map = {
                                               'value': value,
-                                              'room_name':
-                                                  vmPs.dataOfRoom?['room_name'],
+                                              'room_name': paintScreenVM
+                                                  .dataOfRoom?['room_name'],
                                             };
                                             socket.emit('stroke_width', map);
                                           },
@@ -387,8 +394,10 @@ class _PaintScreenState extends State<PaintScreen> {
                                       ),
                                       IconButton(
                                         onPressed: () {
-                                          socket.emit('erase_all',
-                                              vmPs.dataOfRoom?['room_name']);
+                                          socket.emit(
+                                              'erase_all',
+                                              paintScreenVM
+                                                  .dataOfRoom?['room_name']);
                                         },
                                         icon: const Icon(Icons.clear_all),
                                       )
@@ -396,20 +405,21 @@ class _PaintScreenState extends State<PaintScreen> {
                                   )
                                 : Center(
                                     child: Text(
-                                      "${vmPs.dataOfRoom?["turn"]["nick_name"]} is drawing..",
+                                      "${paintScreenVM.dataOfRoom?["turn"]["nick_name"]} is drawing..",
                                       style: const TextStyle(
                                           fontSize: 17,
                                           fontWeight: FontWeight.bold),
                                     ),
                                   ),
-                            vmPs.dataOfRoom?['turn']['nick_name'] != nickName
+                            paintScreenVM.dataOfRoom?['turn']['nick_name'] !=
+                                    nickName
                                 ? Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: hiddenTextWidget,
                                   )
                                 : Center(
                                     child: Text(
-                                      vmPs.dataOfRoom?['word'],
+                                      paintScreenVM.dataOfRoom?['word'],
                                       style: const TextStyle(fontSize: 16),
                                     ),
                                   ),
@@ -441,7 +451,8 @@ class _PaintScreenState extends State<PaintScreen> {
                             ),
                           ],
                         ),
-                        vmPs.dataOfRoom?['turn']['nick_name'] != nickName
+                        paintScreenVM.dataOfRoom?['turn']['nick_name'] !=
+                                nickName
                             ? Align(
                                 alignment: Alignment.bottomCenter,
                                 child: Container(
@@ -455,9 +466,10 @@ class _PaintScreenState extends State<PaintScreen> {
                                         Map msgMap = {
                                           'sender_name': nickName,
                                           'message': value.trim(),
-                                          'word': vmPs.dataOfRoom?["word"],
-                                          'room_name':
-                                              vmPs.dataOfRoom?["room_name"],
+                                          'word':
+                                              paintScreenVM.dataOfRoom?["word"],
+                                          'room_name': paintScreenVM
+                                              .dataOfRoom?["room_name"],
                                           'guessedUserCounter':
                                               guessedUserCounter,
                                           'total_time': 60,
@@ -493,12 +505,14 @@ class _PaintScreenState extends State<PaintScreen> {
                         ),
                       ],
                     )
-                  : FinalLeaderBoard(players_list: vmPs.dataOfRoom?['players'])
+                  : FinalLeaderBoard(
+                      players_list: paintScreenVM.dataOfRoom?['players'])
               : WaitingScreen(
-                  room_name: vmPs.dataOfRoom?['room_name'],
-                  current_room_size: vmPs.dataOfRoom?['players'].length,
-                  room_size: vmPs.dataOfRoom?['room_size'],
-                  players_list: vmPs.dataOfRoom?['players'],
+                  room_name: paintScreenVM.dataOfRoom?['room_name'],
+                  current_room_size:
+                      paintScreenVM.dataOfRoom?['players'].length,
+                  room_size: paintScreenVM.dataOfRoom?['room_size'],
+                  players_list: paintScreenVM.dataOfRoom?['players'],
                 )
           : const Center(
               child: CircularProgressIndicator(),
