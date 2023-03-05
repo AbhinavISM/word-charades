@@ -12,6 +12,8 @@ import 'package:yayscribbl/room_data_provider.dart';
 import 'package:yayscribbl/socket_client.dart';
 import 'package:yayscribbl/socket_repository.dart';
 
+import 'join_room_vm.dart';
+
 void main() {
   runApp(ProviderScope(child: MyApp()));
 }
@@ -29,7 +31,13 @@ final socketRepositoryProvider = Provider<SocketRepository>((ref) {
 });
 
 final createRoomVMprovider = Provider<CreateRoomVM>((ref) {
-  return CreateRoomVM(ref.watch(roomDataProvider));
+  return CreateRoomVM(
+      ref.watch(roomDataProvider), ref.watch(socketRepositoryProvider));
+});
+
+final joinRoomVMprovider = Provider<JoinRoomVM>((ref) {
+  return JoinRoomVM(
+      ref.watch(roomDataProvider), ref.watch(socketRepositoryProvider));
 });
 
 class MyApp extends StatelessWidget {
