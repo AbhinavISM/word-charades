@@ -27,30 +27,7 @@ class PaintScreen extends ConsumerStatefulWidget {
 }
 
 class _PaintScreenState extends ConsumerState<PaintScreen> {
-  late IO.Socket socket;
-  late SocketRepository socketRepository;
-  // late Map dataOfRoom;
   late PaintScreenVM paintScreenVM;
-  // late bool firstBuild;
-  // late final dynamic routeArgs;
-  late String nickName;
-  List<TouchPoints> points = [];
-  StrokeCap strokeType = StrokeCap.round;
-  Color selectedColor = Colors.black;
-  double opacity = 1;
-  double strokeWidth = 2;
-  List<Widget> hiddenTextWidget = [];
-  ScrollController scrollController = ScrollController();
-  List<Map> messages = [];
-  TextEditingController controller = TextEditingController();
-  int guessedUserCounter = 0;
-  int timeLeft = 60;
-  var scaffoldKey = GlobalKey<ScaffoldState>();
-  late Timer timer;
-  bool alreadyGuessedByMe = false;
-  int winnerPoints = 0;
-  String winner = '';
-  bool showFinalLeaderboard = false;
 
   @override
   void initState() {
@@ -61,8 +38,6 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
 
   @override
   void didChangeDependencies() {
-    socketRepository = ref.read(socketRepositoryProvider);
-    socket = socketRepository.socket!;
     super.didChangeDependencies();
   }
 
@@ -70,171 +45,9 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
   void dispose() {
     // socket.dispose();
     paintScreenVM.firstBuild = true;
-    timer.cancel();
+    paintScreenVM.timer.cancel();
     paintScreenVM.roomData.updateDataOfRoom(null);
     super.dispose();
-  }
-
-  void startTimer() {
-    timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      if (timeLeft == 0) {
-        socket.emit(
-            'change_turn', paintScreenVM.roomData.dataOfRoom?['room_name']);
-        setState(() {
-          timer.cancel();
-        });
-      } else {
-        setState(() {
-          timeLeft--;
-        });
-      }
-    });
-  }
-
-  void renderHiddenTextWidget(String text) {
-    hiddenTextWidget.clear();
-    for (int i = 0; i < text.length; i++) {
-      hiddenTextWidget.add(const Text(
-        '_',
-        style: TextStyle(fontSize: 16),
-      ));
-    }
-  }
-
-  void updateRoomEx(Map roomData) {
-    setState(() {
-      paintScreenVM.roomData.updateDataOfRoom(roomData);
-      renderHiddenTextWidget(roomData['word']);
-    });
-    if (roomData['isJoin'] != true) {
-      startTimer();
-    }
-  }
-
-  void pointsToDrawEx(Map point) {
-    setState(() {
-      points.add(TouchPoints(
-        paint: Paint()
-          ..strokeCap = strokeType
-          ..isAntiAlias = true
-          ..color = selectedColor.withOpacity(opacity)
-          ..strokeWidth = strokeWidth,
-        point: Offset(
-          (point['details']['dx'] as double),
-          (point['details']['dy'] as double),
-        ),
-      ));
-    });
-  }
-
-  void updatedColorEx(Color updatedColor) {
-    setState(() {
-      selectedColor = updatedColor;
-    });
-  }
-
-  void strokeWidthEx(double sw) {
-    setState(() {
-      strokeWidth = sw;
-    });
-  }
-
-  void eraseAllEx() {
-    setState(() {
-      points.clear();
-    });
-  }
-
-  void msgEx(Map data) {
-    setState(() {
-      messages.add(data);
-      guessedUserCounter = data['guessedUserCounter'];
-    });
-    if (paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] == nickName) {
-      if (guessedUserCounter ==
-          (paintScreenVM.roomData.dataOfRoom?['players'].length - 1)) {
-        socket.emit(
-            'change_turn', paintScreenVM.roomData.dataOfRoom?['room_name']);
-      }
-    }
-    scrollController.animateTo(
-      scrollController.position.maxScrollExtent + 40,
-      duration: Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-    );
-  }
-
-  void changeTurnEx(Map data) {
-    print('client change turn called');
-    String oldword = paintScreenVM.roomData.dataOfRoom?['word'];
-    print(data.toString());
-    setState(() {
-      paintScreenVM.roomData.updateDataOfRoom(data);
-      renderHiddenTextWidget(paintScreenVM.roomData.dataOfRoom?['word']);
-      guessedUserCounter = 0;
-      timeLeft = 60;
-      points.clear();
-      alreadyGuessedByMe = false;
-      timer.cancel();
-      startTimer();
-    });
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('Word was : $oldword')));
-  }
-
-  void closeInputEx() {
-    socket.emit(
-        'update_score', paintScreenVM.roomData.dataOfRoom?['room_name']);
-    setState(() {
-      alreadyGuessedByMe = true;
-    });
-  }
-
-  void updateScoreEx(Map data) {
-    setState((() {
-      paintScreenVM.roomData.updateDataOfRoom(data);
-    }));
-  }
-
-  void showLeaderBoardEx(Map data) {
-    for (int i = 0; i < data['players'].length; i++) {
-      if (winnerPoints < data['players'][i]['points']) {
-        winner = data['players'][i]['nick_name'];
-        winnerPoints = data['players'][i]['points'];
-      }
-    }
-    setState(() {
-      paintScreenVM.roomData.updateDataOfRoom(data);
-      timer.cancel();
-      showFinalLeaderboard = true;
-      timeLeft = 0;
-    });
-  }
-
-  void connect() {
-    socketRepository.updateRoomListener(updateRoomEx);
-    socketRepository.pointsToDrawListener(pointsToDrawEx);
-    socketRepository.colorChangeListener(updatedColorEx);
-    socketRepository.strokeWidthListener(strokeWidthEx);
-    socketRepository.eraseAllListener(eraseAllEx);
-    socketRepository.msgListener(msgEx);
-    socketRepository.changeTurnListener(changeTurnEx);
-    socketRepository.closeInputListener(closeInputEx);
-    socketRepository.showLeaderBoardListener(showLeaderBoardEx);
-
-    socket.on('user_disconnected', (data) {
-      setState(() {
-        paintScreenVM.roomData.updateDataOfRoom(data);
-      });
-    });
-
-    socket.on('notCorrectGame', (err) {
-      print(err.toString());
-    });
-
-    socket.onDisconnect((data) => print("disconnected"));
-
-    socket.onConnectError((data) => print(data.toString()));
   }
 
   void selectColor() {
@@ -244,7 +57,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
             title: const Text('Choose Color'),
             content: SingleChildScrollView(
               child: BlockPicker(
-                pickerColor: selectedColor,
+                pickerColor: paintScreenVM.selectedColor,
                 onColorChanged: ((color) {
                   String colorString = color.toString();
                   String valueString =
@@ -253,7 +66,8 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                     'color': valueString,
                     'room_name': paintScreenVM.roomData.dataOfRoom?['room_name']
                   };
-                  socket.emit('color_change', map);
+                  paintScreenVM.socketRepository.socket
+                      ?.emit('color_change', map);
                 }),
               ),
             ),
@@ -277,15 +91,17 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
 
     if (paintScreenVM.firstBuild) {
       print('first build just ran');
-      connect();
+      paintScreenVM.connect();
       setState(() {
         paintScreenVM.roomData.dataOfRoom =
             ref.read(roomDataProvider).dataOfRoom;
-        nickName = ModalRoute.of(context)?.settings.arguments as String;
-        renderHiddenTextWidget(paintScreenVM.roomData.dataOfRoom?['word']);
+        paintScreenVM.nickName =
+            ModalRoute.of(context)?.settings.arguments as String;
+        paintScreenVM
+            .renderHiddenTextWidget(paintScreenVM.roomData.dataOfRoom?['word']);
       });
       if (paintScreenVM.roomData.dataOfRoom?['isJoin'] != true) {
-        startTimer();
+        paintScreenVM.startTimer();
       }
       paintScreenVM.firstBuild = false;
     }
@@ -296,10 +112,10 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
               players_list: paintScreenVM.roomData.dataOfRoom?['players'],
             )
           : Container(),
-      key: scaffoldKey,
+      key: paintScreenVM.scaffoldKey,
       body: paintScreenVM.roomData.dataOfRoom != null
           ? paintScreenVM.roomData.dataOfRoom!['isJoin'] != true
-              ? !showFinalLeaderboard
+              ? !ref.watch(paintScreenVMprovider).showFinalLeaderboard
                   ? Stack(
                       children: [
                         Column(
@@ -312,10 +128,11 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                               child: GestureDetector(
                                 onPanUpdate: paintScreenVM.roomData
                                             .dataOfRoom?['turn']['nick_name'] ==
-                                        nickName
+                                        paintScreenVM.nickName
                                     ? (details) {
                                         print(details.localPosition.dx);
-                                        socket.emit('paint', {
+                                        paintScreenVM.socketRepository.socket
+                                            ?.emit('paint', {
                                           'details': {
                                             'dx': details.localPosition.dx,
                                             'dy': details.localPosition.dy,
@@ -327,10 +144,11 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                     : (details) {},
                                 onPanStart: paintScreenVM.roomData
                                             .dataOfRoom?['turn']['nick_name'] ==
-                                        nickName
+                                        paintScreenVM.nickName
                                     ? (details) {
                                         print(details.localPosition.dx);
-                                        socket.emit('paint', {
+                                        paintScreenVM.socketRepository.socket
+                                            ?.emit('paint', {
                                           'details': {
                                             'dx': details.localPosition.dx,
                                             'dy': details.localPosition.dy,
@@ -342,9 +160,10 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                     : (details) {},
                                 onPanEnd: paintScreenVM.roomData
                                             .dataOfRoom?['turn']['nick_name'] ==
-                                        nickName
+                                        paintScreenVM.nickName
                                     ? (details) {
-                                        socket.emit('paint', {
+                                        paintScreenVM.socketRepository.socket
+                                            ?.emit('paint', {
                                           'details': null,
                                           'room_name': paintScreenVM.roomData
                                               .dataOfRoom?['room_name'],
@@ -358,8 +177,8 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                           height: height * 0.55, width: width),
                                       child: CustomPaint(
                                         size: Size.infinite,
-                                        painter:
-                                            MyCustomPainter(pointsList: points),
+                                        painter: MyCustomPainter(
+                                            pointsList: paintScreenVM.points),
                                       ),
                                     ),
                                   ),
@@ -368,13 +187,13 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                             ),
                             paintScreenVM.roomData.dataOfRoom?['turn']
                                         ['nick_name'] ==
-                                    nickName
+                                    paintScreenVM.nickName
                                 ? Row(
                                     children: [
                                       IconButton(
                                         icon: Icon(
                                           Icons.color_lens,
-                                          color: selectedColor,
+                                          color: paintScreenVM.selectedColor,
                                         ),
                                         onPressed: () {
                                           selectColor();
@@ -384,9 +203,11 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                         child: Slider(
                                           min: 1.0,
                                           max: 10.0,
-                                          label: 'Strokewidth $strokeWidth',
-                                          value: strokeWidth,
-                                          activeColor: selectedColor,
+                                          label:
+                                              'Strokewidth $paintScreenVM.strokeWidth',
+                                          value: paintScreenVM.strokeWidth,
+                                          activeColor:
+                                              paintScreenVM.selectedColor,
                                           onChanged: (double value) {
                                             Map map = {
                                               'value': value,
@@ -394,16 +215,20 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                                   .roomData
                                                   .dataOfRoom?['room_name'],
                                             };
-                                            socket.emit('stroke_width', map);
+                                            paintScreenVM
+                                                .socketRepository.socket
+                                                ?.emit('stroke_width', map);
                                           },
                                         ),
                                       ),
                                       IconButton(
                                         onPressed: () {
-                                          socket.emit(
-                                              'erase_all',
-                                              paintScreenVM.roomData
-                                                  .dataOfRoom?['room_name']);
+                                          paintScreenVM.socketRepository.socket
+                                              ?.emit(
+                                                  'erase_all',
+                                                  paintScreenVM
+                                                          .roomData.dataOfRoom?[
+                                                      'room_name']);
                                         },
                                         icon: const Icon(Icons.clear_all),
                                       )
@@ -419,10 +244,10 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                   ),
                             paintScreenVM.roomData.dataOfRoom?['turn']
                                         ['nick_name'] !=
-                                    nickName
+                                    paintScreenVM.nickName
                                 ? Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    children: hiddenTextWidget,
+                                    children: paintScreenVM.hiddenTextWidget,
                                   )
                                 : Center(
                                     child: Text(
@@ -438,7 +263,8 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                   return ListTile(
                                     // ignore: prefer_const_constructors
                                     title: Text(
-                                      messages[index]["sender_name"],
+                                      paintScreenVM.messages[index]
+                                          ["sender_name"],
                                       style: const TextStyle(
                                         color: Colors.black87,
                                         fontSize: 12,
@@ -446,46 +272,48 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                       ),
                                     ),
                                     subtitle: Text(
-                                      messages[index]["message"],
+                                      paintScreenVM.messages[index]["message"],
                                       style: const TextStyle(
                                           color: Colors.black, fontSize: 16),
                                     ),
                                   );
                                 },
-                                controller: scrollController,
+                                controller: paintScreenVM.scrollController,
                                 shrinkWrap: true,
-                                itemCount: messages.length,
+                                itemCount: paintScreenVM.messages.length,
                               ),
                             ),
                           ],
                         ),
                         paintScreenVM.roomData.dataOfRoom?['turn']
                                     ['nick_name'] !=
-                                nickName
+                                paintScreenVM.nickName
                             ? Align(
                                 alignment: Alignment.bottomCenter,
                                 child: Container(
                                   margin: const EdgeInsets.symmetric(
                                       horizontal: 20),
                                   child: TextField(
-                                    readOnly: alreadyGuessedByMe,
-                                    controller: controller,
+                                    readOnly: paintScreenVM.alreadyGuessedByMe,
+                                    controller: paintScreenVM.controller,
                                     onSubmitted: ((value) {
                                       if (value.trim().isNotEmpty) {
                                         Map msgMap = {
-                                          'sender_name': nickName,
+                                          'sender_name': paintScreenVM.nickName,
                                           'message': value.trim(),
                                           'word': paintScreenVM
                                               .roomData.dataOfRoom?["word"],
                                           'room_name': paintScreenVM.roomData
                                               .dataOfRoom?["room_name"],
                                           'guessedUserCounter':
-                                              guessedUserCounter,
+                                              paintScreenVM.guessedUserCounter,
                                           'total_time': 60,
-                                          'time_taken': 60 - timeLeft,
+                                          'time_taken':
+                                              60 - paintScreenVM.timeLeft,
                                         };
-                                        socket.emit('msg', msgMap);
-                                        controller.clear();
+                                        paintScreenVM.socketRepository.socket
+                                            ?.emit('msg', msgMap);
+                                        paintScreenVM.controller.clear();
                                       }
                                     }),
                                     autocorrect: false,
@@ -508,8 +336,9 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                         SafeArea(
                           child: IconButton(
                             icon: Icon(Icons.menu),
-                            onPressed: () =>
-                                scaffoldKey.currentState!.openDrawer(),
+                            onPressed: () => paintScreenVM
+                                .scaffoldKey.currentState!
+                                .openDrawer(),
                           ),
                         ),
                       ],
@@ -534,7 +363,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
           elevation: 7,
           backgroundColor: Colors.white,
           child: Text(
-            '$timeLeft',
+            '${paintScreenVM.timeLeft}',
             style: const TextStyle(color: Colors.black, fontSize: 22),
           ),
         ),

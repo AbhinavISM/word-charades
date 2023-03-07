@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yayscribbl/socket_client.dart';
 
 class SocketRepository {
@@ -85,5 +86,26 @@ class SocketRepository {
     socket?.on('show_leader_board', (data) {
       fun(data);
     });
+  }
+
+  void userDisconnectedLsitener(Function fun) {
+    socket?.off('user_disconnected');
+    socket?.on('user_disconnected', (data) {
+      fun(data);
+    });
+  }
+
+  void notCorrectGameListener() {
+    socket?.on('notCorrectGame', (err) {
+      print(err.toString());
+    });
+  }
+
+  void onDisconnectListener() {
+    socket?.onDisconnect((data) => print("disconnected"));
+  }
+
+  void onConnectErrorListener() {
+    socket?.onConnectError((data) => print(data.toString()));
   }
 }

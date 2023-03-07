@@ -23,7 +23,8 @@ final roomDataProvider = ChangeNotifierProvider<RoomData>((ref) {
 });
 
 final paintScreenVMprovider = ChangeNotifierProvider<PaintScreenVM>((ref) {
-  return PaintScreenVM(ref.watch(roomDataProvider));
+  return PaintScreenVM(
+      ref.watch(roomDataProvider), ref.watch(socketRepositoryProvider));
 });
 
 final socketRepositoryProvider = Provider<SocketRepository>((ref) {

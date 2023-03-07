@@ -141,6 +141,7 @@ io.on('connection', (socket) => {
             // let turnIndex = room.turnIndex;
             if(room.turnIndex+1 == room.players.length){
                 room.currentRound+=1;
+                console.log(room.currentRound.toString);
             }
             if(room.currentRound<=room.max_rounds){
                 const word = await getWord();
@@ -170,6 +171,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('disconnect', async()=>{
+        console.log('someone disconnected');
         try{
             let room = await Room.findOne({'players.socketID': socket.id});
             for(let i = 0; i<room.players.length; i++){

@@ -30,7 +30,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
   Widget build(BuildContext context) {
     createRoomVM = ref.watch(createRoomVMprovider);
     return Scaffold(
-      body: createRoomVM.showProgressBar
+      body: ref.watch(createRoomVMprovider).showProgressBar
           ? const Center(child: CircularProgressIndicator())
           : Container(
               decoration: const BoxDecoration(
