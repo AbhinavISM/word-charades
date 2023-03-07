@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yayscribbl/create_room_vm.dart';
 import 'package:yayscribbl/main.dart';
 // import 'package:provider/provider.dart';
 import 'package:yayscribbl/room_data_provider.dart';
@@ -15,56 +16,21 @@ class CreateRoomScreen extends ConsumerStatefulWidget {
 }
 
 class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
-  final TextEditingController _nameController = TextEditingController();
-
-  final TextEditingController _roomController = TextEditingController();
-
-  String? _maxRounds;
-
-  String? _roomSize;
-
-  late IO.Socket socket;
-
-  bool showProgressBar = false;
-
-  late RoomData roomData;
-
-  late SocketRepository socketRepository;
-
-  void createRoom() {
-    if (_nameController.text.isNotEmpty &&
-        _roomController.text.isNotEmpty &&
-        _maxRounds != null &&
-        _roomSize != null) {
-      setState(() {
-        showProgressBar = true;
-      });
-      print('already connected');
-      socketRepository.createGame({
-        "nick_name": _nameController.text,
-        "room_name": _roomController.text,
-        "room_size": _roomSize,
-        "max_rounds": _maxRounds,
-        "screen_from": 'create_room_screen',
-      });
-      socketRepository.updateRoomListener(updateRoomUI);
-    }
-  }
+  late CreateRoomVM createRoomVM;
 
   void updateRoomUI(Map dataOfRoom) {
-    showProgressBar = false;
-    roomData.updateDataOfRoom(dataOfRoom);
+    createRoomVM.showProgressBar = false;
+    createRoomVM.roomData.updateDataOfRoom(dataOfRoom);
     // print(Provider.of<RoomData>(context).dataOfRoom.toString());
-    Navigator.of(context)
-        .pushNamed('/paint_screen', arguments: _nameController.text);
+    Navigator.of(context).pushNamed('/paint_screen',
+        arguments: createRoomVM.nameController.text);
   }
 
   @override
   Widget build(BuildContext context) {
-    roomData = ref.watch(roomDataProvider);
-    socketRepository = ref.read(socketRepositoryProvider);
+    createRoomVM = ref.watch(createRoomVMprovider);
     return Scaffold(
-      body: showProgressBar
+      body: createRoomVM.showProgressBar
           ? const Center(child: CircularProgressIndicator())
           : Container(
               decoration: const BoxDecoration(
@@ -90,14 +56,14 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
                     child: TextInputWidget(
-                        controller: _nameController,
+                        controller: createRoomVM.nameController,
                         texthint: "Enter your name"),
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.025),
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
                     child: TextInputWidget(
-                        controller: _roomController,
+                        controller: createRoomVM.roomController,
                         texthint: "Enter room name"),
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.025),
@@ -119,11 +85,11 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                         hint: const Text('select Max Rounds'),
                         onChanged: (value) {
                           setState(() {
-                            _maxRounds = value;
+                            createRoomVM.maxRounds = value;
                           });
                         },
                       ),
-                      Text(_maxRounds ?? "please select"),
+                      Text(createRoomVM.maxRounds ?? "please select"),
                     ],
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.025),
@@ -145,11 +111,11 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                         hint: const Text('select Room Size'),
                         onChanged: (value) {
                           setState(() {
-                            _roomSize = value;
+                            createRoomVM.roomSize = value;
                           });
                         },
                       ),
-                      Text(_roomSize ?? "please select"),
+                      Text(createRoomVM.roomSize ?? "please select"),
                     ],
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05),
@@ -157,7 +123,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                     borderRadius: BorderRadius.all(Radius.circular(16)),
                     child: ElevatedButton(
                       onPressed: () {
-                        createRoom();
+                        createRoomVM.createRoom(updateRoomUI);
                       },
                       style: ButtonStyle(
                         minimumSize: MaterialStateProperty.all(
