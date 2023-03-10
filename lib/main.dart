@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:provider/provider.dart';
 import 'package:yayscribbl/Screens/create_room_screen.dart';
 import 'package:yayscribbl/Screens/home_screen.dart';
 import 'package:yayscribbl/Screens/join_room_screen.dart';
@@ -18,27 +17,27 @@ void main() {
   runApp(ProviderScope(child: MyApp()));
 }
 
+final createRoomVMProvider = ChangeNotifierProvider<CreateRoomVM>((ref) {
+  return CreateRoomVM(
+      ref.read(roomDataProvider), ref.read(socketRepositoryProvider));
+});
+
+final joinRoomVMprovider = Provider<JoinRoomVM>((ref) {
+  return JoinRoomVM(
+      ref.read(roomDataProvider), ref.read(socketRepositoryProvider));
+});
+
 final roomDataProvider = ChangeNotifierProvider<RoomData>((ref) {
   return RoomData();
 });
 
 final paintScreenVMprovider = ChangeNotifierProvider<PaintScreenVM>((ref) {
   return PaintScreenVM(
-      ref.watch(roomDataProvider), ref.watch(socketRepositoryProvider));
+      ref.read(roomDataProvider), ref.read(socketRepositoryProvider));
 });
 
 final socketRepositoryProvider = Provider<SocketRepository>((ref) {
   return SocketRepository();
-});
-
-final createRoomVMprovider = Provider<CreateRoomVM>((ref) {
-  return CreateRoomVM(
-      ref.watch(roomDataProvider), ref.watch(socketRepositoryProvider));
-});
-
-final joinRoomVMprovider = Provider<JoinRoomVM>((ref) {
-  return JoinRoomVM(
-      ref.watch(roomDataProvider), ref.watch(socketRepositoryProvider));
 });
 
 class MyApp extends StatelessWidget {

@@ -31,7 +31,9 @@ class PaintScreenVM extends ChangeNotifier {
   bool alreadyGuessedByMe = false;
   int winnerPoints = 0;
   String winner = '';
-  bool showFinalLeaderboard = false;
+  // bool showFinalLeaderboard = false;
+  final StreamController<bool> showFinalLeaderboardController =
+      StreamController();
 
   setFirstBuild(bool b) {
     firstBuild = b;
@@ -176,11 +178,10 @@ class PaintScreenVM extends ChangeNotifier {
       }
     }
     timer.cancel();
-    showFinalLeaderboard = true;
-    print('wether to show : ${showFinalLeaderboard}');
+    showFinalLeaderboardController.sink.add(true);
+    // print('wether to show : ${showFinalLeaderboard}');
     timeLeft = 0;
     notifyListeners();
     roomData.updateDataOfRoom(data);
-    notifyListeners();
   }
 }

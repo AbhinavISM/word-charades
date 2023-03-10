@@ -88,7 +88,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
     paintScreenVM = ref.watch(paintScreenVMprovider);
-
+    print('vmid : ${identityHashCode(paintScreenVM)}');
     if (paintScreenVM.firstBuild) {
       print('first build just ran');
       paintScreenVM.connect();
@@ -115,237 +115,262 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
       key: paintScreenVM.scaffoldKey,
       body: paintScreenVM.roomData.dataOfRoom != null
           ? paintScreenVM.roomData.dataOfRoom!['isJoin'] != true
-              ? !ref.watch(paintScreenVMprovider).showFinalLeaderboard
-                  ? Stack(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Container(
-                              width: width,
-                              height: height * 0.5,
-                              child: GestureDetector(
-                                onPanUpdate: paintScreenVM.roomData
-                                            .dataOfRoom?['turn']['nick_name'] ==
-                                        paintScreenVM.nickName
-                                    ? (details) {
-                                        print(details.localPosition.dx);
-                                        paintScreenVM.socketRepository.socket
-                                            ?.emit('paint', {
-                                          'details': {
-                                            'dx': details.localPosition.dx,
-                                            'dy': details.localPosition.dy,
-                                          },
-                                          'room_name': paintScreenVM.roomData
-                                              .dataOfRoom?['room_name'],
-                                        });
-                                      }
-                                    : (details) {},
-                                onPanStart: paintScreenVM.roomData
-                                            .dataOfRoom?['turn']['nick_name'] ==
-                                        paintScreenVM.nickName
-                                    ? (details) {
-                                        print(details.localPosition.dx);
-                                        paintScreenVM.socketRepository.socket
-                                            ?.emit('paint', {
-                                          'details': {
-                                            'dx': details.localPosition.dx,
-                                            'dy': details.localPosition.dy,
-                                          },
-                                          'room_name': paintScreenVM.roomData
-                                              .dataOfRoom?['room_name'],
-                                        });
-                                      }
-                                    : (details) {},
-                                onPanEnd: paintScreenVM.roomData
-                                            .dataOfRoom?['turn']['nick_name'] ==
-                                        paintScreenVM.nickName
-                                    ? (details) {
-                                        paintScreenVM.socketRepository.socket
-                                            ?.emit('paint', {
-                                          'details': null,
-                                          'room_name': paintScreenVM.roomData
-                                              .dataOfRoom?['room_name'],
-                                        });
-                                      }
-                                    : (details) {},
-                                child: SizedBox.expand(
-                                  child: RepaintBoundary(
-                                    child: ClipRect(
-                                      clipper: MyClipper(
-                                          height: height * 0.55, width: width),
-                                      child: CustomPaint(
-                                        size: Size.infinite,
-                                        painter: MyCustomPainter(
-                                            pointsList: paintScreenVM.points),
+              ? StreamBuilder(
+                  stream: paintScreenVM.showFinalLeaderboardController.stream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting ||
+                        snapshot.data == false) {
+                      print(
+                          'databystream : ${snapshot.data ?? ' still waiting'}');
+                      return Stack(
+                        children: [
+                          // Text(paintScreenVM.showFinalLeaderboard.toString()),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: width,
+                                height: height * 0.5,
+                                child: GestureDetector(
+                                  onPanUpdate: paintScreenVM
+                                                  .roomData.dataOfRoom?['turn']
+                                              ['nick_name'] ==
+                                          paintScreenVM.nickName
+                                      ? (details) {
+                                          print(details.localPosition.dx);
+                                          paintScreenVM.socketRepository.socket
+                                              ?.emit('paint', {
+                                            'details': {
+                                              'dx': details.localPosition.dx,
+                                              'dy': details.localPosition.dy,
+                                            },
+                                            'room_name': paintScreenVM.roomData
+                                                .dataOfRoom?['room_name'],
+                                          });
+                                        }
+                                      : (details) {},
+                                  onPanStart: paintScreenVM
+                                                  .roomData.dataOfRoom?['turn']
+                                              ['nick_name'] ==
+                                          paintScreenVM.nickName
+                                      ? (details) {
+                                          print(details.localPosition.dx);
+                                          paintScreenVM.socketRepository.socket
+                                              ?.emit('paint', {
+                                            'details': {
+                                              'dx': details.localPosition.dx,
+                                              'dy': details.localPosition.dy,
+                                            },
+                                            'room_name': paintScreenVM.roomData
+                                                .dataOfRoom?['room_name'],
+                                          });
+                                        }
+                                      : (details) {},
+                                  onPanEnd: paintScreenVM
+                                                  .roomData.dataOfRoom?['turn']
+                                              ['nick_name'] ==
+                                          paintScreenVM.nickName
+                                      ? (details) {
+                                          paintScreenVM.socketRepository.socket
+                                              ?.emit('paint', {
+                                            'details': null,
+                                            'room_name': paintScreenVM.roomData
+                                                .dataOfRoom?['room_name'],
+                                          });
+                                        }
+                                      : (details) {},
+                                  child: SizedBox.expand(
+                                    child: RepaintBoundary(
+                                      child: ClipRect(
+                                        clipper: MyClipper(
+                                            height: height * 0.55,
+                                            width: width),
+                                        child: CustomPaint(
+                                          size: Size.infinite,
+                                          painter: MyCustomPainter(
+                                              pointsList: paintScreenVM.points),
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            paintScreenVM.roomData.dataOfRoom?['turn']
-                                        ['nick_name'] ==
-                                    paintScreenVM.nickName
-                                ? Row(
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.color_lens,
-                                          color: paintScreenVM.selectedColor,
+                              paintScreenVM.roomData.dataOfRoom?['turn']
+                                          ['nick_name'] ==
+                                      paintScreenVM.nickName
+                                  ? Row(
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.color_lens,
+                                            color: paintScreenVM.selectedColor,
+                                          ),
+                                          onPressed: () {
+                                            selectColor();
+                                          },
                                         ),
-                                        onPressed: () {
-                                          selectColor();
-                                        },
-                                      ),
-                                      Expanded(
-                                        child: Slider(
-                                          min: 1.0,
-                                          max: 10.0,
-                                          label:
-                                              'Strokewidth $paintScreenVM.strokeWidth',
-                                          value: paintScreenVM.strokeWidth,
-                                          activeColor:
-                                              paintScreenVM.selectedColor,
-                                          onChanged: (double value) {
-                                            Map map = {
-                                              'value': value,
-                                              'room_name': paintScreenVM
-                                                  .roomData
-                                                  .dataOfRoom?['room_name'],
-                                            };
+                                        Expanded(
+                                          child: Slider(
+                                            min: 1.0,
+                                            max: 10.0,
+                                            label:
+                                                'Strokewidth $paintScreenVM.strokeWidth',
+                                            value: paintScreenVM.strokeWidth,
+                                            activeColor:
+                                                paintScreenVM.selectedColor,
+                                            onChanged: (double value) {
+                                              Map map = {
+                                                'value': value,
+                                                'room_name': paintScreenVM
+                                                    .roomData
+                                                    .dataOfRoom?['room_name'],
+                                              };
+                                              paintScreenVM
+                                                  .socketRepository.socket
+                                                  ?.emit('stroke_width', map);
+                                            },
+                                          ),
+                                        ),
+                                        IconButton(
+                                          onPressed: () {
                                             paintScreenVM
                                                 .socketRepository.socket
-                                                ?.emit('stroke_width', map);
+                                                ?.emit(
+                                                    'erase_all',
+                                                    paintScreenVM.roomData
+                                                            .dataOfRoom?[
+                                                        'room_name']);
                                           },
+                                          icon: const Icon(Icons.clear_all),
+                                        )
+                                      ],
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        "${paintScreenVM.roomData.dataOfRoom?["turn"]["nick_name"]} is drawing..",
+                                        style: const TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                              paintScreenVM.roomData.dataOfRoom?['turn']
+                                          ['nick_name'] !=
+                                      paintScreenVM.nickName
+                                  ? Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: paintScreenVM.hiddenTextWidget,
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        paintScreenVM
+                                            .roomData.dataOfRoom?['word'],
+                                        style: const TextStyle(fontSize: 16),
+                                      ),
+                                    ),
+                              Container(
+                                height:
+                                    MediaQuery.of(context).size.height * 0.3,
+                                child: ListView.builder(
+                                  itemBuilder: (context, index) {
+                                    return ListTile(
+                                      // ignore: prefer_const_constructors
+                                      title: Text(
+                                        paintScreenVM.messages[index]
+                                            ["sender_name"],
+                                        style: const TextStyle(
+                                          color: Colors.black87,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      IconButton(
-                                        onPressed: () {
-                                          paintScreenVM.socketRepository.socket
-                                              ?.emit(
-                                                  'erase_all',
-                                                  paintScreenVM
-                                                          .roomData.dataOfRoom?[
-                                                      'room_name']);
-                                        },
-                                        icon: const Icon(Icons.clear_all),
-                                      )
-                                    ],
-                                  )
-                                : Center(
-                                    child: Text(
-                                      "${paintScreenVM.roomData.dataOfRoom?["turn"]["nick_name"]} is drawing..",
-                                      style: const TextStyle(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                            paintScreenVM.roomData.dataOfRoom?['turn']
-                                        ['nick_name'] !=
-                                    paintScreenVM.nickName
-                                ? Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: paintScreenVM.hiddenTextWidget,
-                                  )
-                                : Center(
-                                    child: Text(
-                                      paintScreenVM
-                                          .roomData.dataOfRoom?['word'],
-                                      style: const TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                            Container(
-                              height: MediaQuery.of(context).size.height * 0.3,
-                              child: ListView.builder(
-                                itemBuilder: (context, index) {
-                                  return ListTile(
-                                    // ignore: prefer_const_constructors
-                                    title: Text(
-                                      paintScreenVM.messages[index]
-                                          ["sender_name"],
-                                      style: const TextStyle(
-                                        color: Colors.black87,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
+                                      subtitle: Text(
+                                        paintScreenVM.messages[index]
+                                            ["message"],
+                                        style: const TextStyle(
+                                            color: Colors.black, fontSize: 16),
                                       ),
-                                    ),
-                                    subtitle: Text(
-                                      paintScreenVM.messages[index]["message"],
-                                      style: const TextStyle(
-                                          color: Colors.black, fontSize: 16),
-                                    ),
-                                  );
-                                },
-                                controller: paintScreenVM.scrollController,
-                                shrinkWrap: true,
-                                itemCount: paintScreenVM.messages.length,
-                              ),
-                            ),
-                          ],
-                        ),
-                        paintScreenVM.roomData.dataOfRoom?['turn']
-                                    ['nick_name'] !=
-                                paintScreenVM.nickName
-                            ? Align(
-                                alignment: Alignment.bottomCenter,
-                                child: Container(
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 20),
-                                  child: TextField(
-                                    readOnly: paintScreenVM.alreadyGuessedByMe,
-                                    controller: paintScreenVM.controller,
-                                    onSubmitted: ((value) {
-                                      if (value.trim().isNotEmpty) {
-                                        Map msgMap = {
-                                          'sender_name': paintScreenVM.nickName,
-                                          'message': value.trim(),
-                                          'word': paintScreenVM
-                                              .roomData.dataOfRoom?["word"],
-                                          'room_name': paintScreenVM.roomData
-                                              .dataOfRoom?["room_name"],
-                                          'guessedUserCounter':
-                                              paintScreenVM.guessedUserCounter,
-                                          'total_time': 60,
-                                          'time_taken':
-                                              60 - paintScreenVM.timeLeft,
-                                        };
-                                        paintScreenVM.socketRepository.socket
-                                            ?.emit('msg', msgMap);
-                                        paintScreenVM.controller.clear();
-                                      }
-                                    }),
-                                    autocorrect: false,
-                                    decoration: InputDecoration(
-                                      labelText: "guess the word!",
-                                      filled: true,
-                                      fillColor: const Color.fromARGB(
-                                          255, 244, 244, 244),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: const BorderSide(
-                                            color: Colors.transparent),
-                                      ),
-                                    ),
-                                    textInputAction: TextInputAction.done,
-                                  ),
+                                    );
+                                  },
+                                  controller: paintScreenVM.scrollController,
+                                  shrinkWrap: true,
+                                  itemCount: paintScreenVM.messages.length,
                                 ),
-                              )
-                            : Container(),
-                        SafeArea(
-                          child: IconButton(
-                            icon: Icon(Icons.menu),
-                            onPressed: () => paintScreenVM
-                                .scaffoldKey.currentState!
-                                .openDrawer(),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    )
-                  : FinalLeaderBoard(
-                      players_list:
-                          paintScreenVM.roomData.dataOfRoom?['players'])
+                          paintScreenVM.roomData.dataOfRoom?['turn']
+                                      ['nick_name'] !=
+                                  paintScreenVM.nickName
+                              ? Align(
+                                  alignment: Alignment.bottomCenter,
+                                  child: Container(
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    child: TextField(
+                                      readOnly:
+                                          paintScreenVM.alreadyGuessedByMe,
+                                      controller: paintScreenVM.controller,
+                                      onSubmitted: ((value) {
+                                        if (value.trim().isNotEmpty) {
+                                          Map msgMap = {
+                                            'sender_name':
+                                                paintScreenVM.nickName,
+                                            'message': value.trim(),
+                                            'word': paintScreenVM
+                                                .roomData.dataOfRoom?["word"],
+                                            'room_name': paintScreenVM.roomData
+                                                .dataOfRoom?["room_name"],
+                                            'guessedUserCounter': paintScreenVM
+                                                .guessedUserCounter,
+                                            'total_time': 60,
+                                            'time_taken':
+                                                60 - paintScreenVM.timeLeft,
+                                          };
+                                          paintScreenVM.socketRepository.socket
+                                              ?.emit('msg', msgMap);
+                                          paintScreenVM.controller.clear();
+                                        }
+                                      }),
+                                      autocorrect: false,
+                                      decoration: InputDecoration(
+                                        labelText: "guess the word!",
+                                        filled: true,
+                                        fillColor: const Color.fromARGB(
+                                            255, 244, 244, 244),
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                          borderSide: const BorderSide(
+                                              color: Colors.transparent),
+                                        ),
+                                      ),
+                                      textInputAction: TextInputAction.done,
+                                    ),
+                                  ),
+                                )
+                              : Container(),
+                          SafeArea(
+                            child: IconButton(
+                              icon: Icon(Icons.menu),
+                              onPressed: () => paintScreenVM
+                                  .scaffoldKey.currentState!
+                                  .openDrawer(),
+                            ),
+                          ),
+                        ],
+                      );
+                    } else {
+                      print(
+                          'databystream : ${snapshot.data ?? ' still waiting'}');
+
+                      return FinalLeaderBoard(
+                          players_list:
+                              paintScreenVM.roomData.dataOfRoom?['players']);
+                    }
+                  },
+                )
               : WaitingScreen(
                   room_name: paintScreenVM.roomData.dataOfRoom?['room_name'],
                   current_room_size:
