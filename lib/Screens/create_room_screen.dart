@@ -19,7 +19,8 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
   late CreateRoomVM createRoomVM;
 
   void updateRoomUI(Map dataOfRoom) {
-    createRoomVM.showProgressBar = false;
+    // createRoomVM.showProgressBar = false;
+    createRoomVM.showProgressBarController.sink.add(false);
     createRoomVM.roomData.updateDataOfRoom(dataOfRoom);
     // print(Provider.of<RoomData>(context).dataOfRoom.toString());
     Navigator.of(context).pushNamed('/paint_screen',
@@ -28,11 +29,14 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
-    createRoomVM = ref.watch(createRoomVMprovider);
-    return Scaffold(
-      body: createRoomVM.showProgressBar
-          ? const Center(child: CircularProgressIndicator())
-          : Container(
+    createRoomVM = ref.watch(createRoomVMProvider);
+    return StreamBuilder<bool>(
+      stream: createRoomVM.showProgressBarController.stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting ||
+            snapshot.data == false) {
+          return Scaffold(
+            body: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                     begin: Alignment.topCenter,
@@ -72,7 +76,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                     children: [
                       DropdownButton<String>(
                         focusColor: Colors.amber,
-                        items: <String>['2', '5', '10', '15']
+                        items: <String>['1', '2', '5', '10', '15']
                             .map<DropdownMenuItem<String>>(
                               (String value) => DropdownMenuItem(
                                 value: value,
@@ -144,6 +148,13 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                 ],
               ),
             ),
+          );
+        } else if (snapshot.data == true) {
+          return const Center(child: CircularProgressIndicator());
+        } else {
+          return const Center(child: CircularProgressIndicator());
+        }
+      },
     );
   }
 }

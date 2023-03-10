@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:yayscribbl/socket_repository.dart';
@@ -12,14 +14,16 @@ class CreateRoomVM extends ChangeNotifier {
   final TextEditingController roomController = TextEditingController();
   String? maxRounds;
   String? roomSize;
-  bool showProgressBar = false;
+  // bool showProgressBar = false;
+  final StreamController<bool> showProgressBarController = StreamController();
 
   void createRoom(Function updateRoomUI) {
     if (nameController.text.isNotEmpty &&
         roomController.text.isNotEmpty &&
         maxRounds != null &&
         roomSize != null) {
-      showProgressBar = true;
+      // showProgressBar = true;
+      showProgressBarController.sink.add(true);
       notifyListeners();
       print('already connected');
       socketRepository.createGame({

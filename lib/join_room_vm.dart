@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:yayscribbl/room_data_provider.dart';
 import 'package:yayscribbl/socket_repository.dart';
@@ -11,11 +13,14 @@ class JoinRoomVM extends ChangeNotifier {
   final TextEditingController roomController = TextEditingController();
   String? maxRounds;
   String? roomSize;
-  bool showProgressBar = false;
+  // bool showProgressBar = false;
+  final StreamController<bool> showProgressBarController = StreamController();
 
   void joinRoom(Function updateRoomUI) {
     if (nameController.text.isNotEmpty && roomController.text.isNotEmpty) {
-      showProgressBar = true;
+      // showProgressBar = true;
+      showProgressBarController.sink.add(true);
+
       notifyListeners();
       socketRepository.joinGame({
         "nick_name": nameController.text,
