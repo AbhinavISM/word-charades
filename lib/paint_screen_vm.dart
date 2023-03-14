@@ -15,7 +15,7 @@ class PaintScreenVM extends ChangeNotifier {
 
   bool firstBuild = true;
   late String nickName;
-  List<TouchPoints> points = [];
+  List<TouchPoints?> points = [];
   StrokeCap strokeType = StrokeCap.round;
   Color selectedColor = Colors.black;
   double opacity = 1;
@@ -94,17 +94,23 @@ class PaintScreenVM extends ChangeNotifier {
   }
 
   void pointsToDrawEx(Map point) {
-    points.add(TouchPoints(
-      paint: Paint()
-        ..strokeCap = strokeType
-        ..isAntiAlias = true
-        ..color = selectedColor.withOpacity(opacity)
-        ..strokeWidth = strokeWidth,
-      point: Offset(
-        (point['details']['dx'] as double),
-        (point['details']['dy'] as double),
-      ),
-    ));
+    if (point['details'] != null) {
+      points.add(TouchPoints(
+        paint: Paint()
+          ..strokeCap = strokeType
+          ..isAntiAlias = true
+          ..color = selectedColor.withOpacity(opacity)
+          ..strokeWidth = strokeWidth,
+        point: Offset(
+          (point['details']['dx'] as double),
+          (point['details']['dy'] as double),
+        ),
+      ));
+    } else {
+      print('null point aaya');
+      points.add(null);
+    }
+
     notifyListeners();
   }
 

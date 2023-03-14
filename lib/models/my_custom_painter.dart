@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:yayscribbl/models/touch_points.dart';
-import 'dart:ui' as ui;
+import 'dart:ui';
 
 class MyCustomPainter extends CustomPainter {
-  List<TouchPoints> pointsList;
+  List<TouchPoints?> pointsList;
   MyCustomPainter({required this.pointsList});
   // List<Offset> offsetPoints = [];
 
@@ -17,8 +17,8 @@ class MyCustomPainter extends CustomPainter {
 
     for (int i = 0; i < pointsList.length - 1; i++) {
       if (pointsList[i] != null && pointsList[i + 1] != null) {
-        canvas.drawLine(
-            pointsList[i].point, pointsList[i + 1].point, pointsList[i].paint);
+        canvas.drawLine(pointsList[i]!.point, pointsList[i + 1]!.point,
+            pointsList[i]!.paint);
       } else if (pointsList[i] != null && pointsList[i + 1] == null) {
         // offsetPoints.clear();
         // offsetPoints.add(pointsList[i].point);
@@ -27,7 +27,7 @@ class MyCustomPainter extends CustomPainter {
         // canvas.drawPoints(
         //     ui.PointMode.points, offsetPoints, pointsList[i].paint);
         canvas.drawPoints(
-            ui.PointMode.points, [pointsList[i].point], pointsList[i].paint);
+            PointMode.points, [pointsList[i]!.point], pointsList[i]!.paint);
       }
     }
   }
