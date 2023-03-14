@@ -24,9 +24,7 @@ class SocketRepository {
   void pointsToDrawListener(Function fun) {
     socket?.off('points_to_draw');
     socket?.on('points_to_draw', (point) {
-      if (point['details'] != null) {
-        fun(point);
-      }
+      fun(point);
     });
   }
 

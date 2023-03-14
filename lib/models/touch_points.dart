@@ -6,10 +6,4 @@ class TouchPoints {
   Offset point;
 
   TouchPoints({required this.paint, required this.point});
-
-  Map<String, dynamic> toJson() {
-    return {
-      'point': {'dx': '${point.dx}', 'dy': '${point.dy}'}
-    };
-  }
 }
