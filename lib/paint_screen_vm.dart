@@ -1,17 +1,17 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:yayscribbl/room_data_provider.dart';
 import 'package:yayscribbl/socket_repository.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import 'models/touch_points.dart';
 
 class PaintScreenVM extends ChangeNotifier {
   final RoomData roomData;
   late SocketRepository socketRepository;
-  PaintScreenVM(this.roomData, this.socketRepository);
+  PaintScreenVM(this.roomData, this.socketRepository) {
+    connect();
+  }
 
   bool firstBuild = true;
   late String nickName;
@@ -33,7 +33,7 @@ class PaintScreenVM extends ChangeNotifier {
   String winner = '';
   // bool showFinalLeaderboard = false;
   final StreamController<bool> showFinalLeaderboardController =
-      StreamController();
+      StreamController.broadcast();
 
   setFirstBuild(bool b) {
     firstBuild = b;
@@ -158,8 +158,6 @@ class PaintScreenVM extends ChangeNotifier {
     alreadyGuessedByMe = false;
     timer.cancel();
     startTimer();
-    // ScaffoldMessenger.of(context)
-    //     .showSnackBar(SnackBar(content: Text('Word was : $oldword')));
     notifyListeners();
   }
 

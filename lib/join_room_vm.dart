@@ -14,7 +14,8 @@ class JoinRoomVM extends ChangeNotifier {
   String? maxRounds;
   String? roomSize;
   // bool showProgressBar = false;
-  final StreamController<bool> showProgressBarController = StreamController();
+  final StreamController<bool> showProgressBarController =
+      StreamController.broadcast();
 
   void joinRoom(Function updateRoomUI) {
     if (nameController.text.isNotEmpty && roomController.text.isNotEmpty) {
