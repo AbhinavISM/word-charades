@@ -4,11 +4,9 @@ import 'package:yayscribbl/Screens/create_room_screen.dart';
 import 'package:yayscribbl/Screens/home_screen.dart';
 import 'package:yayscribbl/Screens/join_room_screen.dart';
 import 'package:yayscribbl/Screens/paint_screen.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:yayscribbl/create_room_vm.dart';
 import 'package:yayscribbl/paint_screen_vm.dart';
 import 'package:yayscribbl/room_data_provider.dart';
-import 'package:yayscribbl/socket_client.dart';
 import 'package:yayscribbl/socket_repository.dart';
 
 import 'join_room_vm.dart';
@@ -17,21 +15,23 @@ void main() {
   runApp(ProviderScope(child: MyApp()));
 }
 
-final createRoomVMProvider = ChangeNotifierProvider<CreateRoomVM>((ref) {
+final createRoomVMProvider =
+    ChangeNotifierProvider.autoDispose<CreateRoomVM>((ref) {
   return CreateRoomVM(
       ref.read(roomDataProvider), ref.read(socketRepositoryProvider));
 });
 
-final joinRoomVMprovider = Provider<JoinRoomVM>((ref) {
+final joinRoomVMprovider = Provider.autoDispose<JoinRoomVM>((ref) {
   return JoinRoomVM(
       ref.read(roomDataProvider), ref.read(socketRepositoryProvider));
 });
 
-final roomDataProvider = ChangeNotifierProvider<RoomData>((ref) {
+final roomDataProvider = Provider<RoomData>((ref) {
   return RoomData();
 });
 
-final paintScreenVMprovider = ChangeNotifierProvider<PaintScreenVM>((ref) {
+final paintScreenVMprovider =
+    ChangeNotifierProvider.autoDispose<PaintScreenVM>((ref) {
   return PaintScreenVM(
       ref.read(roomDataProvider), ref.read(socketRepositoryProvider));
 });

@@ -1,19 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:provider/provider.dart';
-
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:yayscribbl/Screens/final_leader_board.dart';
 import 'package:yayscribbl/Screens/waiting_screen.dart';
 import 'package:yayscribbl/main.dart';
-import 'package:yayscribbl/models/touch_points.dart';
 import 'package:yayscribbl/paint_screen_vm.dart';
-import 'package:yayscribbl/room_data_provider.dart';
-import 'package:yayscribbl/socket_client.dart';
-import 'package:yayscribbl/socket_repository.dart';
 
 import '../models/my_custom_painter.dart';
 import '../widgets/my_clipper.dart';
@@ -88,18 +79,13 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
     paintScreenVM = ref.watch(paintScreenVMprovider);
+    paintScreenVM.nickName =
+        ModalRoute.of(context)?.settings.arguments as String;
     print('vmid : ${identityHashCode(paintScreenVM)}');
     if (paintScreenVM.firstBuild) {
       print('first build just ran');
-      paintScreenVM.connect();
-      setState(() {
-        paintScreenVM.roomData.dataOfRoom =
-            ref.read(roomDataProvider).dataOfRoom;
-        paintScreenVM.nickName =
-            ModalRoute.of(context)?.settings.arguments as String;
-        paintScreenVM
-            .renderHiddenTextWidget(paintScreenVM.roomData.dataOfRoom?['word']);
-      });
+      paintScreenVM
+          .renderHiddenTextWidget(paintScreenVM.roomData.dataOfRoom?['word']);
       if (paintScreenVM.roomData.dataOfRoom?['isJoin'] != true) {
         paintScreenVM.startTimer();
       }

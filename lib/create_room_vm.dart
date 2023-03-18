@@ -1,9 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
-import 'package:yayscribbl/socket_repository.dart';
 import 'package:yayscribbl/room_data_provider.dart';
+import 'package:yayscribbl/socket_repository.dart';
 
 class CreateRoomVM extends ChangeNotifier {
   final RoomData roomData;
@@ -15,7 +14,8 @@ class CreateRoomVM extends ChangeNotifier {
   String? maxRounds;
   String? roomSize;
   // bool showProgressBar = false;
-  final StreamController<bool> showProgressBarController = StreamController();
+  final StreamController<bool> showProgressBarController =
+      StreamController.broadcast();
 
   void createRoom(Function updateRoomUI) {
     if (nameController.text.isNotEmpty &&

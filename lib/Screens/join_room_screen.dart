@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yayscribbl/join_room_vm.dart';
-// import 'package:provider/provider.dart';
 import 'package:yayscribbl/main.dart';
-import 'package:yayscribbl/socket_repository.dart';
 
-import '../room_data_provider.dart';
 import '../widgets/text_input_widget.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class JoinRoomScreen extends ConsumerStatefulWidget {
   const JoinRoomScreen({super.key});
