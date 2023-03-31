@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yayscribbl/Screens/final_leader_board.dart';
 import 'package:yayscribbl/Screens/waiting_screen.dart';
 import 'package:yayscribbl/main.dart';
-import 'package:yayscribbl/paint_screen_vm.dart';
+import 'package:yayscribbl/viewmodels/paint_screen_vm.dart';
 
 import '../models/my_custom_painter.dart';
 import '../widgets/my_clipper.dart';
@@ -22,7 +22,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
   void initState() {
     // firstBuild = true;
     print('init state ran');
-    ref.read(paintScreenVMprovider).setupVoiceSDKEngine();
+    // ref.read(paintScreenVMprovider).setupVoiceSDKEngine();
     super.initState();
   }
 
@@ -38,7 +38,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
     paintScreenVM.firstBuild = true;
     paintScreenVM.timer.cancel();
     paintScreenVM.roomData.updateDataOfRoom(null);
-    paintScreenVM.leave();
+    // paintScreenVM.leave();
     ref.read(paintScreenVMprovider).dispose();
     super.dispose();
   }

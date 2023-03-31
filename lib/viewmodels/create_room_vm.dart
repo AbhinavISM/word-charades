@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:yayscribbl/room_data_provider.dart';
-import 'package:yayscribbl/socket_repository.dart';
+import 'package:yayscribbl/viewmodels/room_data_provider.dart';
+import 'package:yayscribbl/repository/socket_repository.dart';
 
 class CreateRoomVM extends ChangeNotifier {
   final RoomData roomData;

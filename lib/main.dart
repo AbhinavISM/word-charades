@@ -4,12 +4,12 @@ import 'package:yayscribbl/Screens/create_room_screen.dart';
 import 'package:yayscribbl/Screens/home_screen.dart';
 import 'package:yayscribbl/Screens/join_room_screen.dart';
 import 'package:yayscribbl/Screens/paint_screen.dart';
-import 'package:yayscribbl/create_room_vm.dart';
-import 'package:yayscribbl/paint_screen_vm.dart';
-import 'package:yayscribbl/room_data_provider.dart';
-import 'package:yayscribbl/socket_repository.dart';
+import 'package:yayscribbl/viewmodels/create_room_vm.dart';
+import 'package:yayscribbl/viewmodels/paint_screen_vm.dart';
+import 'package:yayscribbl/viewmodels/room_data_provider.dart';
+import 'package:yayscribbl/repository/socket_repository.dart';
 
-import 'join_room_vm.dart';
+import 'viewmodels/join_room_vm.dart';
 
 void main() {
   runApp(ProviderScope(child: MyApp()));
