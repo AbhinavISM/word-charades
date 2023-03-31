@@ -16,8 +16,9 @@ class SocketRepository {
 
   void updateRoomListener(Function fun) {
     socket?.off('update_room');
-    socket?.on('update_room', (dataOfRoom) {
-      fun(dataOfRoom);
+    socket?.on('update_room', (roomAndPlayer) {
+      print(roomAndPlayer);
+      fun(roomAndPlayer['dataOfRoom']);
     });
   }
 

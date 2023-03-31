@@ -1,18 +1,21 @@
 import 'dart:async';
 
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:yayscribbl/room_data_provider.dart';
 import 'package:yayscribbl/socket_repository.dart';
 
 import 'models/touch_points.dart';
 
+const String appId = "241714311a2a48569fd152d4411e5a9b";
+
 class PaintScreenVM extends ChangeNotifier {
   final RoomData roomData;
-  late SocketRepository socketRepository;
+  final SocketRepository socketRepository;
   PaintScreenVM(this.roomData, this.socketRepository) {
     connect();
   }
-
   bool firstBuild = true;
   late String nickName;
   List<TouchPoints?> points = [];
@@ -60,8 +63,67 @@ class PaintScreenVM extends ChangeNotifier {
     roomData.updateDataOfRoom(data);
   }
 
+  late RtcEngine agoraEngine;
+  String token = '';
+  int uid = 0; // uid of the local user
+  int? _remoteUid; // uid of the remote user
+  bool _isJoined = false; // Indicates if the local user has joined the channel
+  Future<void> setupVoiceSDKEngine() async {
+    // retrieve or request microphone permission
+    await [Permission.microphone].request();
+
+    //create an instance of the Agora engine
+    agoraEngine = createAgoraRtcEngine();
+    await agoraEngine.initialize(const RtcEngineContext(appId: appId));
+
+    // Register the event handler
+    agoraEngine.registerEventHandler(
+      RtcEngineEventHandler(
+        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+          _isJoined = true;
+        },
+        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
+          _remoteUid = remoteUid;
+        },
+        onUserOffline: (RtcConnection connection, int remoteUid,
+            UserOfflineReasonType reason) {
+          _remoteUid = null;
+        },
+      ),
+    );
+    join();
+  }
+
+  void join() async {
+    // for (int i = 0; i < roomData.dataOfRoom?['players'].length; i++) {
+    //   if (roomData.dataOfRoom?['players'][i]['nick_name'] == nickName) {
+    //     uid = i;
+    //     break;
+    //   }
+    // }
+    uid = DateTime.now().millisecondsSinceEpoch;
+    // Set channel options including the client role and channel profile
+    ChannelMediaOptions options = const ChannelMediaOptions(
+      clientRoleType: ClientRoleType.clientRoleBroadcaster,
+      channelProfile: ChannelProfileType.channelProfileCommunication,
+    );
+
+    await agoraEngine.joinChannel(
+      channelId: roomData.dataOfRoom?['room_name'],
+      options: options,
+      uid: uid,
+      token: token,
+    );
+  }
+
+  void leave() async {
+    _isJoined = false;
+    _remoteUid = null;
+    await agoraEngine.leaveChannel();
+  }
+
   void startTimer() {
-    timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (timeLeft == 0) {
         socketRepository.socket
             ?.emit('change_turn', roomData.dataOfRoom?['room_name']);
@@ -140,7 +202,7 @@ class PaintScreenVM extends ChangeNotifier {
     }
     scrollController.animateTo(
       scrollController.position.maxScrollExtent + 40,
-      duration: Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
     );
     notifyListeners();

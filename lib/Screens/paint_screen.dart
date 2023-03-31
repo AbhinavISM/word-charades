@@ -18,12 +18,11 @@ class PaintScreen extends ConsumerStatefulWidget {
 }
 
 class _PaintScreenState extends ConsumerState<PaintScreen> {
-  late PaintScreenVM paintScreenVM;
-
   @override
   void initState() {
     // firstBuild = true;
     print('init state ran');
+    ref.read(paintScreenVMprovider).setupVoiceSDKEngine();
     super.initState();
   }
 
@@ -35,13 +34,16 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
   @override
   void dispose() {
     // socket.dispose();
+    final paintScreenVM = ref.read(paintScreenVMprovider);
     paintScreenVM.firstBuild = true;
     paintScreenVM.timer.cancel();
     paintScreenVM.roomData.updateDataOfRoom(null);
+    paintScreenVM.leave();
+    ref.read(paintScreenVMprovider).dispose();
     super.dispose();
   }
 
-  void selectColor() {
+  void selectColor(PaintScreenVM paintScreenVM) {
     showDialog(
       context: context,
       builder: ((context) => AlertDialog(
@@ -78,7 +80,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
     final height = MediaQuery.of(context).size.height;
-    paintScreenVM = ref.watch(paintScreenVMprovider);
+    final paintScreenVM = ref.watch(paintScreenVMprovider);
     paintScreenVM.nickName =
         ModalRoute.of(context)?.settings.arguments as String;
     print('vmid : ${identityHashCode(paintScreenVM)}');
@@ -115,7 +117,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              Container(
+                              SizedBox(
                                 width: width,
                                 height: height * 0.5,
                                 child: GestureDetector(
@@ -193,7 +195,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                             color: paintScreenVM.selectedColor,
                                           ),
                                           onPressed: () {
-                                            selectColor();
+                                            selectColor(paintScreenVM);
                                           },
                                         ),
                                         Expanded(
@@ -255,7 +257,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                         style: const TextStyle(fontSize: 16),
                                       ),
                                     ),
-                              Container(
+                              SizedBox(
                                 height:
                                     MediaQuery.of(context).size.height * 0.3,
                                 child: ListView.builder(
@@ -339,7 +341,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                               : Container(),
                           SafeArea(
                             child: IconButton(
-                              icon: Icon(Icons.menu),
+                              icon: const Icon(Icons.menu),
                               onPressed: () => paintScreenVM
                                   .scaffoldKey.currentState!
                                   .openDrawer(),

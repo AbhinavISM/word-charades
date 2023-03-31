@@ -51,7 +51,13 @@ io.on('connection', (socket) => {
             room.players.push(player);
             room = await room.save();
             socket.join(room_name);
-            io.to(room_name).emit('update_room', room);
+            let playerToSend;
+                for(let i = 0; i<room.players.length; i++){
+                    if(room.players[i].nick_name == nick_name){
+                    playerToSend = room.players[i];
+                    }
+                }
+            io.to(room_name).emit('update_room', {dataOfRoom : room , thisPlayer : playerToSend});
         } catch (err) {
             console.log(err);
         }
@@ -64,7 +70,12 @@ io.on('connection', (socket) => {
                 socket.emit('notCorrectGame', 'please enter a valid room name');
                 return;
             }
-
+            for(let i = 0; i<room.players.length; i++){
+                if(room.players[i].nick_name == nick_name){
+                socket.emit('notCorrectGame', 'name is already taken');
+                return;
+                }
+            }
             if(room.isJoin){
                 let player = {
                     socketID: socket.id,
@@ -79,7 +90,13 @@ io.on('connection', (socket) => {
 
                 room.turn = room.players[room.turnIndex];
                 room = await room.save();
-                io.to(room_name).emit('update_room', room);
+                let playerToSend;
+                for(let i = 0; i<room.players.length; i++){
+                    if(room.players[i].nick_name == nick_name){
+                    playerToSend = room.players[i];
+                    }
+                }
+                io.to(room_name).emit('update_room', {dataOfRoom : room , thisPlayer : playerToSend});
             }else{
                 socket.emit('notCorrectGame', 'this game is in progress, please try later');
             }
