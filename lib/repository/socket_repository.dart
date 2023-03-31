@@ -87,16 +87,16 @@ class SocketRepository {
     });
   }
 
-  void userDisconnectedLsitener(Function fun) {
+  void userDisconnectedListener(Function fun) {
     socket?.off('user_disconnected');
-    socket?.on('user_disconnected', (data) {
-      fun(data);
+    socket?.on('user_disconnected', (roomAndWhoDisconnected) {
+      fun(roomAndWhoDisconnected['dataOfRoom'], roomAndWhoDisconnected['playerWhoDisconnected']);
     });
   }
 
-  void notCorrectGameListener() {
+  void notCorrectGameListener(Function fun) {
     socket?.on('notCorrectGame', (err) {
-      print(err.toString());
+      fun(err.toString());
     });
   }
 

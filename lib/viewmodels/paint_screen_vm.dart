@@ -1,10 +1,10 @@
 import 'dart:async';
 
-// import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
-// import 'package:permission_handler/permission_handler.dart';
-import 'package:yayscribbl/viewmodels/room_data_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
+import 'package:yayscribbl/viewmodels/room_data_provider.dart';
 
 import '../models/touch_points.dart';
 
@@ -13,7 +13,9 @@ const String appId = "241714311a2a48569fd152d4411e5a9b";
 class PaintScreenVM extends ChangeNotifier {
   final RoomData roomData;
   final SocketRepository socketRepository;
-  PaintScreenVM(this.roomData, this.socketRepository) {
+  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
+  PaintScreenVM(
+      this.roomData, this.socketRepository, this.scaffoldMessengerKey) {
     connect();
   }
   bool firstBuild = true;
@@ -53,74 +55,76 @@ class PaintScreenVM extends ChangeNotifier {
     socketRepository.changeTurnListener(changeTurnEx);
     socketRepository.closeInputListener(closeInputEx);
     socketRepository.showLeaderBoardListener(showLeaderBoardEx);
-    socketRepository.userDisconnectedLsitener(userDisonnectedEx);
-    socketRepository.notCorrectGameListener();
+    socketRepository.userDisconnectedListener(userDisonnectedEx);
     socketRepository.onDisconnectListener();
     socketRepository.onConnectErrorListener();
   }
 
-  void userDisonnectedEx(Map data) {
-    roomData.updateDataOfRoom(data);
+  void userDisonnectedEx(Map dataOfRoom, Map disconnectedUser) {
+    roomData.updateDataOfRoom(dataOfRoom);
+    final disconnectedNickName = disconnectedUser['nick_name'];
+    scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(content: Text('{$disconnectedNickName} disconnected')));
   }
 
-  // late RtcEngine agoraEngine;
-  // String token = '';
-  // int uid = 0; // uid of the local user
-  // int? _remoteUid; // uid of the remote user
-  // bool _isJoined = false; // Indicates if the local user has joined the channel
-  // Future<void> setupVoiceSDKEngine() async {
-  //   // retrieve or request microphone permission
-  //   await [Permission.microphone].request();
-  //
-  //   //create an instance of the Agora engine
-  //   agoraEngine = createAgoraRtcEngine();
-  //   await agoraEngine.initialize(const RtcEngineContext(appId: appId));
-  //
-  //   // Register the event handler
-  //   agoraEngine.registerEventHandler(
-  //     RtcEngineEventHandler(
-  //       onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-  //         _isJoined = true;
-  //       },
-  //       onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-  //         _remoteUid = remoteUid;
-  //       },
-  //       onUserOffline: (RtcConnection connection, int remoteUid,
-  //           UserOfflineReasonType reason) {
-  //         _remoteUid = null;
-  //       },
-  //     ),
-  //   );
-  //   join();
-  // }
-  //
-  // void join() async {
-  //   // for (int i = 0; i < roomData.dataOfRoom?['players'].length; i++) {
-  //   //   if (roomData.dataOfRoom?['players'][i]['nick_name'] == nickName) {
-  //   //     uid = i;
-  //   //     break;
-  //   //   }
-  //   // }
-  //   uid = DateTime.now().millisecondsSinceEpoch;
-  //   // Set channel options including the client role and channel profile
-  //   ChannelMediaOptions options = const ChannelMediaOptions(
-  //     clientRoleType: ClientRoleType.clientRoleBroadcaster,
-  //     channelProfile: ChannelProfileType.channelProfileCommunication,
-  //   );
-  //
-  //   await agoraEngine.joinChannel(
-  //     channelId: roomData.dataOfRoom?['room_name'],
-  //     options: options,
-  //     uid: uid,
-  //     token: token,
-  //   );
-  // }
-  //
-  // void leave() async {
-  //   _isJoined = false;
-  //   _remoteUid = null;
-  //   await agoraEngine.leaveChannel();
-  // }
+  late RtcEngine agoraEngine;
+  String token = '';
+  int uid = 0; // uid of the local user
+  int? _remoteUid; // uid of the remote user
+  bool _isJoined = false; // Indicates if the local user has joined the channel
+  Future<void> setupVoiceSDKEngine() async {
+    // retrieve or request microphone permission
+    await [Permission.microphone].request();
+
+    //create an instance of the Agora engine
+    agoraEngine = createAgoraRtcEngine();
+    await agoraEngine.initialize(const RtcEngineContext(appId: appId));
+
+    // Register the event handler
+    agoraEngine.registerEventHandler(
+      RtcEngineEventHandler(
+        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
+          _isJoined = true;
+        },
+        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
+          _remoteUid = remoteUid;
+        },
+        onUserOffline: (RtcConnection connection, int remoteUid,
+            UserOfflineReasonType reason) {
+          _remoteUid = null;
+        },
+      ),
+    );
+    join();
+  }
+
+  void join() async {
+    // for (int i = 0; i < roomData.dataOfRoom?['players'].length; i++) {
+    //   if (roomData.dataOfRoom?['players'][i]['nick_name'] == nickName) {
+    //     uid = i;
+    //     break;
+    //   }
+    // }
+    uid = DateTime.now().millisecondsSinceEpoch;
+    // Set channel options including the client role and channel profile
+    ChannelMediaOptions options = const ChannelMediaOptions(
+      clientRoleType: ClientRoleType.clientRoleBroadcaster,
+      channelProfile: ChannelProfileType.channelProfileCommunication,
+    );
+
+    await agoraEngine.joinChannel(
+      channelId: roomData.dataOfRoom?['room_name'],
+      options: options,
+      uid: uid,
+      token: token,
+    );
+  }
+
+  void leave() async {
+    _isJoined = false;
+    _remoteUid = null;
+    await agoraEngine.leaveChannel();
+  }
 
   void startTimer() {
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {

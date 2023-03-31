@@ -191,14 +191,16 @@ io.on('connection', (socket) => {
         console.log('someone disconnected');
         try{
             let room = await Room.findOne({'players.socketID': socket.id});
+            let whoDisconnected;
             for(let i = 0; i<room.players.length; i++){
                 if(room.players[i].socketID === socket.id){
+                    whoDisconnected = room.players[i];
                     room.players.splice(i,1);
                 }
             }
             room = await room.save();
             if(room.players.length === 1){
-                socket.broadcast.to(room.room_name).emit('show_leader_board', room);
+                socket.broadcast.to(room.room_name).emit('show_leader_board', {dataOfRoom : room, playerWhoDisconnected : whoDisconnected});
             }else{
                 socket.broadcast.to(room.room_name).emit('user_disconnected', room);
             }

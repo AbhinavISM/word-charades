@@ -18,12 +18,12 @@ void main() {
 final createRoomVMProvider =
     ChangeNotifierProvider.autoDispose<CreateRoomVM>((ref) {
   return CreateRoomVM(
-      ref.read(roomDataProvider), ref.read(socketRepositoryProvider), ref.watch(navigatorKeyProvider));
+      ref.read(roomDataProvider), ref.read(socketRepositoryProvider), ref.read(navigatorKeyProvider), ref.read(scaffoldMessengerKeyProvider));
 });
 
 final joinRoomVMprovider = Provider.autoDispose<JoinRoomVM>((ref) {
   return JoinRoomVM(
-      ref.read(roomDataProvider), ref.read(socketRepositoryProvider), ref.watch(navigatorKeyProvider));
+      ref.read(roomDataProvider), ref.read(socketRepositoryProvider), ref.read(navigatorKeyProvider),ref.read(scaffoldMessengerKeyProvider));
 });
 
 final roomDataProvider = Provider<RoomData>((ref) {
@@ -33,12 +33,14 @@ final roomDataProvider = Provider<RoomData>((ref) {
 final paintScreenVMprovider =
     ChangeNotifierProvider.autoDispose<PaintScreenVM>((ref) {
   return PaintScreenVM(
-      ref.read(roomDataProvider), ref.read(socketRepositoryProvider));
+      ref.read(roomDataProvider), ref.read(socketRepositoryProvider), ref.read(scaffoldMessengerKeyProvider));
 });
 
 final socketRepositoryProvider = Provider<SocketRepository>((ref) {
   return SocketRepository();
 });
+final scaffoldMessengerKeyProvider =
+Provider((ref) => GlobalKey<ScaffoldMessengerState>());
 
 final navigatorKeyProvider = Provider((ref) => GlobalKey<NavigatorState>());
 
@@ -55,6 +57,7 @@ class MyApp extends ConsumerWidget {
         // primaryColor: const Color.fromARGB(255, 84, 9, 163),
         primarySwatch: Colors.deepOrange,
       ),
+      scaffoldMessengerKey: ref.watch(scaffoldMessengerKeyProvider),
       navigatorKey: ref.watch(navigatorKeyProvider),
       home: const MyHomePage(),
       routes: {

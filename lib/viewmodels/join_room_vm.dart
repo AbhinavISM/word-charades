@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:yayscribbl/viewmodels/room_data_provider.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
 
@@ -8,7 +8,10 @@ class JoinRoomVM extends ChangeNotifier {
   final RoomData roomData;
   final SocketRepository socketRepository;
   final GlobalKey<NavigatorState> navigatorKey;
-  JoinRoomVM(this.roomData, this.socketRepository, this.navigatorKey);
+  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
+  JoinRoomVM(this.roomData, this.socketRepository, this.navigatorKey, this.scaffoldMessengerKey){
+    socketRepository.notCorrectGameListener(notCorrectGameEx);
+  }
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController roomController = TextEditingController();
@@ -41,5 +44,9 @@ class JoinRoomVM extends ChangeNotifier {
     //     .pushNamed('/paint_screen', arguments: joinRoomVM.nameController.text);
     navigatorKey.currentState?.pushNamed('/paint_screen',
         arguments: nameController.text);
+  }
+  void notCorrectGameEx(String errMessage){
+    showProgressBarController.sink.add(false);
+    scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(content: Text(errMessage)));
   }
 }

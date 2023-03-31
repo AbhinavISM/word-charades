@@ -8,7 +8,10 @@ class CreateRoomVM extends ChangeNotifier {
   final RoomData roomData;
   final SocketRepository socketRepository;
   final GlobalKey<NavigatorState> navigatorKey;
-  CreateRoomVM(this.roomData, this.socketRepository, this.navigatorKey);
+  final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
+  CreateRoomVM(this.roomData, this.socketRepository, this.navigatorKey, this.scaffoldMessengerKey){
+    socketRepository.notCorrectGameListener(notCorrectGameEx);
+  }
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController roomController = TextEditingController();
@@ -56,5 +59,10 @@ class CreateRoomVM extends ChangeNotifier {
     //     arguments: createRoomVM.nameController.text);
     navigatorKey.currentState?.pushNamed('/paint_screen',
         arguments: nameController.text);
+  }
+
+  void notCorrectGameEx(String errMessage){
+    showProgressBarController.sink.add(false);
+    scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(content: Text(errMessage)));
   }
 }
