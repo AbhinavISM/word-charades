@@ -5,28 +5,12 @@ import 'package:yayscribbl/main.dart';
 
 import '../widgets/text_input_widget.dart';
 
-class JoinRoomScreen extends ConsumerStatefulWidget {
+class JoinRoomScreen extends ConsumerWidget {
   const JoinRoomScreen({super.key});
 
   @override
-  ConsumerState<JoinRoomScreen> createState() => _JoinRoomScreenState();
-}
-
-class _JoinRoomScreenState extends ConsumerState<JoinRoomScreen> {
-  late JoinRoomVM joinRoomVM;
-
-  void updateRoomUI(Map dataOfRoom) {
-    // joinRoomVM.showProgressBar = false;
-    joinRoomVM.showProgressBarController.sink.add(false);
-    joinRoomVM.roomData.updateDataOfRoom(dataOfRoom);
-    // print(Provider.of<RoomData>(context).dataOfRoom.toString());
-    Navigator.of(context)
-        .pushNamed('/paint_screen', arguments: joinRoomVM.nameController.text);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    joinRoomVM = ref.watch(joinRoomVMprovider);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final joinRoomVM = ref.watch(joinRoomVMprovider);
     return StreamBuilder(
       stream: joinRoomVM.showProgressBarController.stream,
       builder: (context, snapshot) {
@@ -72,7 +56,7 @@ class _JoinRoomScreenState extends ConsumerState<JoinRoomScreen> {
                     borderRadius: BorderRadius.all(Radius.circular(16)),
                     child: ElevatedButton(
                       onPressed: () {
-                        joinRoomVM.joinRoom(updateRoomUI);
+                        joinRoomVM.joinRoom();
                       },
                       style: ButtonStyle(
                         backgroundColor: MaterialStateProperty.all(

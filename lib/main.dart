@@ -18,12 +18,12 @@ void main() {
 final createRoomVMProvider =
     ChangeNotifierProvider.autoDispose<CreateRoomVM>((ref) {
   return CreateRoomVM(
-      ref.read(roomDataProvider), ref.read(socketRepositoryProvider));
+      ref.read(roomDataProvider), ref.read(socketRepositoryProvider), ref.watch(navigatorKeyProvider));
 });
 
 final joinRoomVMprovider = Provider.autoDispose<JoinRoomVM>((ref) {
   return JoinRoomVM(
-      ref.read(roomDataProvider), ref.read(socketRepositoryProvider));
+      ref.read(roomDataProvider), ref.read(socketRepositoryProvider), ref.watch(navigatorKeyProvider));
 });
 
 final roomDataProvider = Provider<RoomData>((ref) {
@@ -40,18 +40,22 @@ final socketRepositoryProvider = Provider<SocketRepository>((ref) {
   return SocketRepository();
 });
 
-class MyApp extends StatelessWidget {
+final navigatorKeyProvider = Provider((ref) => GlobalKey<NavigatorState>());
+
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref
+      ) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
         // primaryColor: const Color.fromARGB(255, 84, 9, 163),
         primarySwatch: Colors.deepOrange,
       ),
+      navigatorKey: ref.watch(navigatorKeyProvider),
       home: const MyHomePage(),
       routes: {
         '/create_room_screen': (ctx) => CreateRoomScreen(),

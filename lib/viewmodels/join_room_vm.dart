@@ -7,7 +7,8 @@ import 'package:yayscribbl/repository/socket_repository.dart';
 class JoinRoomVM extends ChangeNotifier {
   final RoomData roomData;
   final SocketRepository socketRepository;
-  JoinRoomVM(this.roomData, this.socketRepository);
+  final GlobalKey<NavigatorState> navigatorKey;
+  JoinRoomVM(this.roomData, this.socketRepository, this.navigatorKey);
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController roomController = TextEditingController();
@@ -17,7 +18,7 @@ class JoinRoomVM extends ChangeNotifier {
   final StreamController<bool> showProgressBarController =
       StreamController.broadcast();
 
-  void joinRoom(Function updateRoomUI) {
+  void joinRoom() {
     if (nameController.text.isNotEmpty && roomController.text.isNotEmpty) {
       // showProgressBar = true;
       showProgressBarController.sink.add(true);
@@ -30,5 +31,15 @@ class JoinRoomVM extends ChangeNotifier {
       });
       socketRepository.updateRoomListener(updateRoomUI);
     }
+  }
+  void updateRoomUI(Map dataOfRoom) {
+    // joinRoomVM.showProgressBar = false;
+    showProgressBarController.sink.add(false);
+    roomData.updateDataOfRoom(dataOfRoom);
+    // print(Provider.of<RoomData>(context).dataOfRoom.toString());
+    // Navigator.of(context)
+    //     .pushNamed('/paint_screen', arguments: joinRoomVM.nameController.text);
+    navigatorKey.currentState?.pushNamed('/paint_screen',
+        arguments: nameController.text);
   }
 }

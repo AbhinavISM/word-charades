@@ -4,28 +4,12 @@ import 'package:yayscribbl/viewmodels/create_room_vm.dart';
 import 'package:yayscribbl/main.dart';
 import 'package:yayscribbl/widgets/text_input_widget.dart';
 
-class CreateRoomScreen extends ConsumerStatefulWidget {
-  CreateRoomScreen({super.key});
+class CreateRoomScreen extends ConsumerWidget {
+  const CreateRoomScreen({super.key});
 
   @override
-  ConsumerState<CreateRoomScreen> createState() => _CreateRoomScreenState();
-}
-
-class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
-  late CreateRoomVM createRoomVM;
-
-  void updateRoomUI(Map dataOfRoom) {
-    // createRoomVM.showProgressBar = false;
-    createRoomVM.showProgressBarController.sink.add(false);
-    createRoomVM.roomData.updateDataOfRoom(dataOfRoom);
-    // print(Provider.of<RoomData>(context).dataOfRoom.toString());
-    Navigator.of(context).pushNamed('/paint_screen',
-        arguments: createRoomVM.nameController.text);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    createRoomVM = ref.watch(createRoomVMProvider);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final createRoomVM = ref.watch(createRoomVMProvider);
     return StreamBuilder<bool>(
       stream: createRoomVM.showProgressBarController.stream,
       builder: (context, snapshot) {
@@ -84,12 +68,10 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                             .toList(),
                         hint: const Text('select Max Rounds'),
                         onChanged: (value) {
-                          setState(() {
-                            createRoomVM.maxRounds = value;
-                          });
+                            createRoomVM.setMaxRounds = value;
                         },
                       ),
-                      Text(createRoomVM.maxRounds ?? "please select"),
+                      Text(createRoomVM.getMaxRounds ?? "please select"),
                     ],
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.025),
@@ -110,12 +92,10 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                             .toList(),
                         hint: const Text('select Room Size'),
                         onChanged: (value) {
-                          setState(() {
-                            createRoomVM.roomSize = value;
-                          });
+                            createRoomVM.setRoomSize = value;
                         },
                       ),
-                      Text(createRoomVM.roomSize ?? "please select"),
+                      Text(createRoomVM.getRoomSize ?? "please select"),
                     ],
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05),
@@ -123,7 +103,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                     borderRadius: BorderRadius.all(Radius.circular(16)),
                     child: ElevatedButton(
                       onPressed: () {
-                        createRoomVM.createRoom(updateRoomUI);
+                        createRoomVM.createRoom();
                       },
                       style: ButtonStyle(
                         minimumSize: MaterialStateProperty.all(

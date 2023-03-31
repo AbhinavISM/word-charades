@@ -7,21 +7,32 @@ import 'package:yayscribbl/repository/socket_repository.dart';
 class CreateRoomVM extends ChangeNotifier {
   final RoomData roomData;
   final SocketRepository socketRepository;
-  CreateRoomVM(this.roomData, this.socketRepository);
+  final GlobalKey<NavigatorState> navigatorKey;
+  CreateRoomVM(this.roomData, this.socketRepository, this.navigatorKey);
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController roomController = TextEditingController();
-  String? maxRounds;
-  String? roomSize;
+  String? _maxRounds;
+  String? _roomSize;
+  get getMaxRounds => _maxRounds;
+  get getRoomSize => _roomSize;
+  set setMaxRounds (String? maxRounds){
+    _maxRounds = maxRounds;
+    notifyListeners();
+  }
+  set setRoomSize (String? roomSize){
+    _roomSize = roomSize;
+    notifyListeners();
+  }
   // bool showProgressBar = false;
   final StreamController<bool> showProgressBarController =
       StreamController.broadcast();
 
-  void createRoom(Function updateRoomUI) {
+  void createRoom() {
     if (nameController.text.isNotEmpty &&
         roomController.text.isNotEmpty &&
-        maxRounds != null &&
-        roomSize != null) {
+        _maxRounds != null &&
+        _roomSize != null) {
       // showProgressBar = true;
       showProgressBarController.sink.add(true);
       notifyListeners();
@@ -29,11 +40,21 @@ class CreateRoomVM extends ChangeNotifier {
       socketRepository.createGame({
         "nick_name": nameController.text,
         "room_name": roomController.text,
-        "room_size": roomSize,
-        "max_rounds": maxRounds,
+        "room_size": _roomSize,
+        "max_rounds": _maxRounds,
         "screen_from": 'create_room_screen',
       });
       socketRepository.updateRoomListener(updateRoomUI);
     }
+  }
+  void updateRoomUI(Map dataOfRoom) {
+    // createRoomVM.showProgressBar = false;
+    showProgressBarController.sink.add(false);
+    roomData.updateDataOfRoom(dataOfRoom);
+    // print(Provider.of<RoomData>(context).dataOfRoom.toString());
+    // Navigator.of(context).pushNamed('/paint_screen',
+    //     arguments: createRoomVM.nameController.text);
+    navigatorKey.currentState?.pushNamed('/paint_screen',
+        arguments: nameController.text);
   }
 }
