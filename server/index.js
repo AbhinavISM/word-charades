@@ -1,13 +1,26 @@
 const express = require("express");
-const http = require("http");
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 // bad line causes error in websocket connection
 // var server = http.createServer(app);
-
+function convertStringToDate(dateTimeString) {
+    var [datePart, timePart] = dateTimeString.split(' '); // Split the date and time parts
+    var [hhmmss, ms] = timePart.split('.');
+    // var [year, month, day] = datePart.split('-').map(Number); // Split the date part into year, month, and day
+    // var [hours, minutes, seconds] = timePart.split(':').map(Number); // Split the time part into hours, minutes, and seconds
+  
+    // Create a new Date object using the extracted values
+    var dateObject = new Date(datePart+"T"+hhmmss+"+05:30");
+  
+    return dateObject;
+  }
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('server started and running at port' + PORT);
+    console.log('date : ', new Date("08 June 2023 10:01:00 UTC+05:30"));
+    console.log('date : ', new Date("2023-06-08T10:01:00 UTC+05:30"));
+    console.log('date : ', convertStringToDate("2023-06-08 11:59:07.240114"));
+
 });
 
 const mongoose = require("mongoose");

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:yayscribbl/viewmodels/create_room_vm.dart';
 import 'package:yayscribbl/main.dart';
 import 'package:yayscribbl/widgets/text_input_widget.dart';
 
@@ -68,7 +67,7 @@ class CreateRoomScreen extends ConsumerWidget {
                             .toList(),
                         hint: const Text('select Max Rounds'),
                         onChanged: (value) {
-                            createRoomVM.setMaxRounds = value;
+                          createRoomVM.setMaxRounds = value;
                         },
                       ),
                       Text(createRoomVM.getMaxRounds ?? "please select"),
@@ -92,7 +91,7 @@ class CreateRoomScreen extends ConsumerWidget {
                             .toList(),
                         hint: const Text('select Room Size'),
                         onChanged: (value) {
-                            createRoomVM.setRoomSize = value;
+                          createRoomVM.setRoomSize = value;
                         },
                       ),
                       Text(createRoomVM.getRoomSize ?? "please select"),
@@ -100,7 +99,7 @@ class CreateRoomScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05),
                   ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
                     child: ElevatedButton(
                       onPressed: () {
                         createRoomVM.createRoom();

@@ -1,6 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:yayscribbl/models/touch_points.dart';
-import 'dart:ui';
 
 class MyCustomPainter extends CustomPainter {
   List<TouchPoints?> pointsList;

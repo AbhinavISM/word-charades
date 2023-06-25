@@ -9,7 +9,7 @@ class FinalLeaderBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        padding: EdgeInsets.all(8),
+        padding: const EdgeInsets.all(8),
         child: Column(
           children: [
             ListView.builder(
@@ -18,11 +18,11 @@ class FinalLeaderBoard extends StatelessWidget {
                 return ListTile(
                   title: Text(
                     players_list[index]['nick_name'],
-                    style: TextStyle(fontSize: 24),
+                    style: const TextStyle(fontSize: 24),
                   ),
                   trailing: Text(
                     players_list[index]['points'].toString(),
-                    style: TextStyle(fontSize: 24),
+                    style: const TextStyle(fontSize: 24),
                   ),
                 );
               }),
@@ -32,10 +32,10 @@ class FinalLeaderBoard extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(context,
                       MaterialPageRoute(builder: (BuildContext context) {
-                    return MyHomePage();
+                    return const MyHomePage();
                   }), (route) => false);
                 },
-                child: Text('New Game')),
+                child: const Text('New Game')),
           ],
         ),
       ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:yayscribbl/viewmodels/join_room_vm.dart';
 import 'package:yayscribbl/main.dart';
 
 import '../widgets/text_input_widget.dart';
@@ -18,7 +17,7 @@ class JoinRoomScreen extends ConsumerWidget {
             snapshot.data == false) {
           return Scaffold(
             body: Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -53,7 +52,7 @@ class JoinRoomScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05),
                   ClipRRect(
-                    borderRadius: BorderRadius.all(Radius.circular(16)),
+                    borderRadius: const BorderRadius.all(Radius.circular(16)),
                     child: ElevatedButton(
                       onPressed: () {
                         joinRoomVM.joinRoom();

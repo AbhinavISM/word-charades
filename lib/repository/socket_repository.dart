@@ -90,7 +90,8 @@ class SocketRepository {
   void userDisconnectedListener(Function fun) {
     socket?.off('user_disconnected');
     socket?.on('user_disconnected', (roomAndWhoDisconnected) {
-      fun(roomAndWhoDisconnected['dataOfRoom'], roomAndWhoDisconnected['playerWhoDisconnected']);
+      fun(roomAndWhoDisconnected['dataOfRoom'],
+          roomAndWhoDisconnected['playerWhoDisconnected']);
     });
   }
 

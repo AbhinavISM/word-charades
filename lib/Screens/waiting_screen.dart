@@ -23,7 +23,7 @@ class WaitingScreen extends StatelessWidget {
             height: MediaQuery.of(context).size.height * 0.03,
           ),
           Padding(
-            padding: EdgeInsets.all(8),
+            padding: const EdgeInsets.all(8),
             child: Text(
               'waiting for ${room_size - current_room_size} players to join',
               style: const TextStyle(fontSize: 24),
@@ -41,7 +41,7 @@ class WaitingScreen extends StatelessWidget {
                   ClipboardData(text: room_name),
                 );
                 ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text('Copied!')));
+                    .showSnackBar(const SnackBar(content: Text('Copied!')));
               }),
               decoration: InputDecoration(
                 hintText: 'tap to copy room name',

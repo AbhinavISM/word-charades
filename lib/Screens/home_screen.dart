@@ -49,7 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                   child: ElevatedButton(
                     onPressed: () =>
                         Navigator.of(context).pushNamed('/create_room_screen'),
@@ -70,7 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 ClipRRect(
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                   child: ElevatedButton(
                     onPressed: () =>
                         Navigator.of(context).pushNamed('/join_room_screen'),

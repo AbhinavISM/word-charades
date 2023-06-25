@@ -8,18 +8,18 @@ class SideDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       child: Center(
-        child: Container(
+        child: SizedBox(
           height: double.maxFinite,
           child: ListView.builder(
             itemBuilder: ((context, index) {
               return ListTile(
                 title: Text(
                   players_list[index]['nick_name'],
-                  style: TextStyle(fontSize: 24),
+                  style: const TextStyle(fontSize: 24),
                 ),
                 trailing: Text(
                   players_list[index]['points'].toString(),
-                  style: TextStyle(fontSize: 24),
+                  style: const TextStyle(fontSize: 24),
                 ),
               );
             }),

@@ -47,7 +47,8 @@ class PlayerModel {
 
   String toJson() => json.encode(toMap());
 
-  factory PlayerModel.fromJson(String source) => PlayerModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory PlayerModel.fromJson(String source) =>
+      PlayerModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -57,19 +58,18 @@ class PlayerModel {
   @override
   bool operator ==(covariant PlayerModel other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.nickName == nickName &&
-      other.socketID == socketID &&
-      other.isPartyLeader == isPartyLeader &&
-      other.points == points;
+
+    return other.nickName == nickName &&
+        other.socketID == socketID &&
+        other.isPartyLeader == isPartyLeader &&
+        other.points == points;
   }
 
   @override
   int get hashCode {
     return nickName.hashCode ^
-      socketID.hashCode ^
-      isPartyLeader.hashCode ^
-      points.hashCode;
+        socketID.hashCode ^
+        isPartyLeader.hashCode ^
+        points.hashCode;
   }
 }

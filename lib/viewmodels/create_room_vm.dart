@@ -1,15 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:yayscribbl/viewmodels/room_data_provider.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
+import 'package:yayscribbl/viewmodels/room_data_provider.dart';
 
 class CreateRoomVM extends ChangeNotifier {
   final RoomData roomData;
   final SocketRepository socketRepository;
   final GlobalKey<NavigatorState> navigatorKey;
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
-  CreateRoomVM(this.roomData, this.socketRepository, this.navigatorKey, this.scaffoldMessengerKey){
+  CreateRoomVM(this.roomData, this.socketRepository, this.navigatorKey,
+      this.scaffoldMessengerKey) {
     socketRepository.notCorrectGameListener(notCorrectGameEx);
   }
 
@@ -19,14 +20,16 @@ class CreateRoomVM extends ChangeNotifier {
   String? _roomSize;
   get getMaxRounds => _maxRounds;
   get getRoomSize => _roomSize;
-  set setMaxRounds (String? maxRounds){
+  set setMaxRounds(String? maxRounds) {
     _maxRounds = maxRounds;
     notifyListeners();
   }
-  set setRoomSize (String? roomSize){
+
+  set setRoomSize(String? roomSize) {
     _roomSize = roomSize;
     notifyListeners();
   }
+
   // bool showProgressBar = false;
   final StreamController<bool> showProgressBarController =
       StreamController.broadcast();
@@ -50,6 +53,7 @@ class CreateRoomVM extends ChangeNotifier {
       socketRepository.updateRoomListener(updateRoomUI);
     }
   }
+
   void updateRoomUI(Map dataOfRoom) {
     // createRoomVM.showProgressBar = false;
     showProgressBarController.sink.add(false);
@@ -57,12 +61,13 @@ class CreateRoomVM extends ChangeNotifier {
     // print(Provider.of<RoomData>(context).dataOfRoom.toString());
     // Navigator.of(context).pushNamed('/paint_screen',
     //     arguments: createRoomVM.nameController.text);
-    navigatorKey.currentState?.pushNamed('/paint_screen',
-        arguments: nameController.text);
+    navigatorKey.currentState
+        ?.pushNamed('/paint_screen', arguments: nameController.text);
   }
 
-  void notCorrectGameEx(String errMessage){
+  void notCorrectGameEx(String errMessage) {
     showProgressBarController.sink.add(false);
-    scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(content: Text(errMessage)));
+    scaffoldMessengerKey.currentState
+        ?.showSnackBar(SnackBar(content: Text(errMessage)));
   }
 }

@@ -1,15 +1,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:yayscribbl/viewmodels/room_data_provider.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
+import 'package:yayscribbl/viewmodels/room_data_provider.dart';
 
 class JoinRoomVM extends ChangeNotifier {
   final RoomData roomData;
   final SocketRepository socketRepository;
   final GlobalKey<NavigatorState> navigatorKey;
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
-  JoinRoomVM(this.roomData, this.socketRepository, this.navigatorKey, this.scaffoldMessengerKey){
+  JoinRoomVM(this.roomData, this.socketRepository, this.navigatorKey,
+      this.scaffoldMessengerKey) {
     socketRepository.notCorrectGameListener(notCorrectGameEx);
   }
 
@@ -35,6 +36,7 @@ class JoinRoomVM extends ChangeNotifier {
       socketRepository.updateRoomListener(updateRoomUI);
     }
   }
+
   void updateRoomUI(Map dataOfRoom) {
     // joinRoomVM.showProgressBar = false;
     showProgressBarController.sink.add(false);
@@ -42,11 +44,13 @@ class JoinRoomVM extends ChangeNotifier {
     // print(Provider.of<RoomData>(context).dataOfRoom.toString());
     // Navigator.of(context)
     //     .pushNamed('/paint_screen', arguments: joinRoomVM.nameController.text);
-    navigatorKey.currentState?.pushNamed('/paint_screen',
-        arguments: nameController.text);
+    navigatorKey.currentState
+        ?.pushNamed('/paint_screen', arguments: nameController.text);
   }
-  void notCorrectGameEx(String errMessage){
+
+  void notCorrectGameEx(String errMessage) {
     showProgressBarController.sink.add(false);
-    scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(content: Text(errMessage)));
+    scaffoldMessengerKey.currentState
+        ?.showSnackBar(SnackBar(content: Text(errMessage)));
   }
 }

@@ -2,7 +2,6 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-
 import 'package:yayscribbl/models/player_model.dart';
 
 class RoomModel {
@@ -74,14 +73,19 @@ class RoomModel {
       currentRound: map['currentRound'] as int,
       isJoin: map['isJoin'] as bool,
       turnIndex: map['turnIndex'] as int,
-      players: List<PlayerModel>.from((map['players'] as List<int>).map<PlayerModel>((x) => PlayerModel.fromMap(x as Map<String,dynamic>),),),
-      turn: PlayerModel.fromMap(map['turn'] as Map<String,dynamic>),
+      players: List<PlayerModel>.from(
+        (map['players'] as List<int>).map<PlayerModel>(
+          (x) => PlayerModel.fromMap(x as Map<String, dynamic>),
+        ),
+      ),
+      turn: PlayerModel.fromMap(map['turn'] as Map<String, dynamic>),
     );
   }
 
   String toJson() => json.encode(toMap());
 
-  factory RoomModel.fromJson(String source) => RoomModel.fromMap(json.decode(source) as Map<String, dynamic>);
+  factory RoomModel.fromJson(String source) =>
+      RoomModel.fromMap(json.decode(source) as Map<String, dynamic>);
 
   @override
   String toString() {
@@ -91,29 +95,28 @@ class RoomModel {
   @override
   bool operator ==(covariant RoomModel other) {
     if (identical(this, other)) return true;
-  
-    return 
-      other.word == word &&
-      other.roomName == roomName &&
-      other.roomSize == roomSize &&
-      other.maxRounds == maxRounds &&
-      other.currentRound == currentRound &&
-      other.isJoin == isJoin &&
-      other.turnIndex == turnIndex &&
-      listEquals(other.players, players) &&
-      other.turn == turn;
+
+    return other.word == word &&
+        other.roomName == roomName &&
+        other.roomSize == roomSize &&
+        other.maxRounds == maxRounds &&
+        other.currentRound == currentRound &&
+        other.isJoin == isJoin &&
+        other.turnIndex == turnIndex &&
+        listEquals(other.players, players) &&
+        other.turn == turn;
   }
 
   @override
   int get hashCode {
     return word.hashCode ^
-      roomName.hashCode ^
-      roomSize.hashCode ^
-      maxRounds.hashCode ^
-      currentRound.hashCode ^
-      isJoin.hashCode ^
-      turnIndex.hashCode ^
-      players.hashCode ^
-      turn.hashCode;
+        roomName.hashCode ^
+        roomSize.hashCode ^
+        maxRounds.hashCode ^
+        currentRound.hashCode ^
+        isJoin.hashCode ^
+        turnIndex.hashCode ^
+        players.hashCode ^
+        turn.hashCode;
   }
 }
