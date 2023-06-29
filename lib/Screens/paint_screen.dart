@@ -76,6 +76,15 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
     );
   }
 
+  void onFirstBuild(PaintScreenVM paintScreenVM) {
+    paintScreenVM
+        .renderHiddenTextWidget(paintScreenVM.roomData.dataOfRoom?['word']);
+    if (paintScreenVM.roomData.dataOfRoom?['isJoin'] != true) {
+      paintScreenVM.startTimer();
+    }
+    paintScreenVM.firstBuild = false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -86,12 +95,8 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
     print('vmid : ${identityHashCode(paintScreenVM)}');
     if (paintScreenVM.firstBuild) {
       print('first build just ran');
-      paintScreenVM
-          .renderHiddenTextWidget(paintScreenVM.roomData.dataOfRoom?['word']);
-      if (paintScreenVM.roomData.dataOfRoom?['isJoin'] != true) {
-        paintScreenVM.startTimer();
-      }
-      paintScreenVM.firstBuild = false;
+      Future.delayed(Duration.zero)
+          .then((value) => {onFirstBuild(paintScreenVM)});
     }
 
     return Scaffold(
