@@ -29,6 +29,9 @@ const io = require("socket.io")(server)
 const db = 'mongodb+srv://Abhinavkism:TMecPvft6v9rf9B8@cluster0.akleghw.mongodb.net/?retryWrites=true&w=majority';
 const Room = require('./models/Room');
 const getWord = require('./api/getWord');
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const User = require("./models/User");
 
 app.use(express.json());
 
@@ -38,6 +41,45 @@ mongoose.connect(db).then(() => {
     console.log(e);
 });
 
+app.post("/signup", async (req, res) => {
+    const {username, email, password} = req.body;
+    try{
+        const existing_user = await User.findOne({email : email});
+        if(existing_user){
+            return res.status(400).json({message : "User already exists"});
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const result = User.create({
+            name : username,
+            email : email,
+            password : hashedPassword,
+        });
+        const token = jwt.sign({email : result.email, id : result._id}, "wordcharades");
+        res.status(201).json({user : result, token : token});
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({message : "Something went wrong"});
+    }
+});
+
+app.get("/signin",  async (req, res) => {
+    const {email, password} = req.body;
+    try {
+        const existingUser = await User.findOne({email : email});
+        if(!existingUser){
+            res.status(400).json({message : "User does not exist"});
+        }
+        const matchPassword = await bcrypt.compare(password, existingUser.password);
+        if(!matchPassword){
+            return res.status(400).json({message : "invalid credentials"});
+        }
+        const token = jwt.sign({email : existingUser.email, id : existingUser._id}, "wordcharades");
+        res.status(201).json({user : existingUser, token : token});
+    } catch (e) {
+        console.log(e);
+        res.status(500).json({message : "Something went wrong"});
+    }
+});
 
 io.on('connection', (socket) => {
     console.log("a user connected", socket.id);
