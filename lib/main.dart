@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yayscribbl/Screens/create_room_screen.dart';
-import 'package:yayscribbl/Screens/home_screen.dart';
 import 'package:yayscribbl/Screens/join_room_screen.dart';
+import 'package:yayscribbl/Screens/login/login_page.dart';
 import 'package:yayscribbl/Screens/paint_screen.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
 import 'package:yayscribbl/viewmodels/create_room_vm.dart';
@@ -72,7 +72,7 @@ class MyApp extends ConsumerWidget {
       ),
       scaffoldMessengerKey: ref.watch(scaffoldMessengerKeyProvider),
       navigatorKey: ref.watch(navigatorKeyProvider),
-      home: const MyHomePage(),
+      home: const LogIn(),
       routes: {
         '/create_room_screen': (ctx) => const CreateRoomScreen(),
         '/join_room_screen': (ctx) => const JoinRoomScreen(),

@@ -6,7 +6,7 @@ class SocketClient {
 
   SocketClient._internal() {
     socket = IO.io(
-        'http://localhost:4000',
+        'https://4d3f-202-168-86-175.ngrok-free.app',
         IO.OptionBuilder()
             .setTransports(['websocket'])
             .disableAutoConnect()
