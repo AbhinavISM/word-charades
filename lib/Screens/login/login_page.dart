@@ -102,8 +102,8 @@ class _LoginScreenState extends ConsumerState<LogIn> {
                                   child: AuthInputText(
                                     textEditingController:
                                         employeeIdTextController,
-                                    hintText: "Employee123",
-                                    labelText: "Empolyee ID",
+                                    hintText: "Crazy Player",
+                                    labelText: "Player Name",
                                     textInputType: TextInputType.none,
                                   ),
                                 ),

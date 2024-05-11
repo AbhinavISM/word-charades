@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const PORT = process.env.PORT || 4000;
+const PORT = 4000;
 
 // bad line causes error in websocket connection
 // var server = http.createServer(app);
@@ -16,7 +16,7 @@ function convertStringToDate(dateTimeString) {
     return dateObject;
   }
 const server = app.listen(PORT, '0.0.0.0', () => {
-    console.log('server started and running at port' + PORT);
+    console.log('server started and running at port ' + PORT);
     console.log('date : ', new Date("08 June 2023 10:01:00 UTC+05:30"));
     console.log('date : ', new Date("2023-06-08T10:01:00 UTC+05:30"));
     console.log('date : ', convertStringToDate("2023-06-08 11:59:07.240114"));
@@ -26,7 +26,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 const mongoose = require("mongoose");
 const io = require("socket.io")(server)
 
-const db = 'mongodb+srv://Abhinavkism:TMecPvft6v9rf9B8@cluster0.akleghw.mongodb.net/?retryWrites=true&w=majority';
+const db = 'mongodb+srv://Abhinavkism:TMecPvft6v9rf9B8@cluster0.akleghw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 const Room = require('./models/Room');
 const getWord = require('./api/getWord');
 const bcrypt = require("bcrypt");

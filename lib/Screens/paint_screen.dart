@@ -22,7 +22,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
   void initState() {
     // firstBuild = true;
     print('init state ran');
-    // ref.read(paintScreenVMprovider).setupVoiceSDKEngine();
+    ref.read(paintScreenVMprovider).setupVoiceSDKEngine();
     super.initState();
   }
 
