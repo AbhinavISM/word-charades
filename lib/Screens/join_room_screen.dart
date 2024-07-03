@@ -17,14 +17,12 @@ class JoinRoomScreen extends ConsumerWidget {
             snapshot.data == false) {
           return Scaffold(
             body: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Color.fromRGBO(41, 30, 83, 1),
-                      Color.fromRGBO(143, 34, 210, 1)
-                    ]),
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Colors.blue[300]!, Colors.purple[300]!],
+                ),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -51,27 +49,24 @@ class JoinRoomScreen extends ConsumerWidget {
                         texthint: "Enter room name"),
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05),
-                  ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(16)),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        joinRoomVM.joinRoom();
-                      },
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.all(
-                            const Color.fromRGBO(111, 0, 244, 1)),
-                        minimumSize: MaterialStateProperty.all(
-                          Size(
-                            MediaQuery.of(context).size.width / 3,
-                            MediaQuery.of(context).size.height * 0.075,
-                          ),
-                        ),
+                  ElevatedButton(
+                    onPressed: () => joinRoomVM.joinRoom(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.purple[700],
+                      minimumSize: Size(
+                        MediaQuery.of(context).size.width / 3,
+                        MediaQuery.of(context).size.height * 0.075,
                       ),
-                      child: const Text(
-                        "Join!",
-                        style: TextStyle(fontSize: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 50, vertical: 15),
+                      textStyle: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
                       ),
                     ),
+                    child: const Text('Join!'),
                   ),
                 ],
               ),
