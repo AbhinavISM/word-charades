@@ -12,13 +12,18 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue[300]!,
-        title: const Center(
-          child: Text(
-            "wOrD cHaRaDeS",
-            style: TextStyle(letterSpacing: 3),
+        title: const Text(
+          'wOrD cHaRaDeS!',
+          style: TextStyle(
+            letterSpacing: 3,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
+        centerTitle: true,
+        backgroundColor: Colors.blue[700],
+        elevation: 4,
       ),
       body: Container(
         decoration: BoxDecoration(

@@ -16,6 +16,20 @@ class JoinRoomScreen extends ConsumerWidget {
         if (snapshot.connectionState == ConnectionState.waiting ||
             snapshot.data == false) {
           return Scaffold(
+            appBar: AppBar(
+              title: const Text(
+                'wOrD cHaRaDeS!',
+                style: TextStyle(
+                  letterSpacing: 3,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              centerTitle: true,
+              backgroundColor: Colors.blue[700],
+              elevation: 4,
+            ),
             body: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
