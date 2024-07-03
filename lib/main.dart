@@ -66,10 +66,6 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        // primaryColor: const Color.fromARGB(255, 84, 9, 163),
-        primarySwatch: Colors.deepOrange,
-      ),
       scaffoldMessengerKey: ref.watch(scaffoldMessengerKeyProvider),
       navigatorKey: ref.watch(navigatorKeyProvider),
       home: const MyHomePage(),
