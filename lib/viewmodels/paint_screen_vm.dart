@@ -128,7 +128,8 @@ class PaintScreenVM extends ChangeNotifier {
 
   void startTimer() {
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (timeLeft == 0) {
+      if (timeLeft == 0 &&
+          roomData.dataOfRoom?['turn']['nick_name'] == nickName) {
         socketRepository.socket
             ?.emit('change_turn', roomData.dataOfRoom?['room_name']);
         timer.cancel();

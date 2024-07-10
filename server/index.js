@@ -17,10 +17,6 @@ function convertStringToDate(dateTimeString) {
   }
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('server started and running at port ' + PORT);
-    console.log('date : ', new Date("08 June 2023 10:01:00 UTC+05:30"));
-    console.log('date : ', new Date("2023-06-08T10:01:00 UTC+05:30"));
-    console.log('date : ', convertStringToDate("2023-06-08 11:59:07.240114"));
-
 });
 
 const mongoose = require("mongoose");

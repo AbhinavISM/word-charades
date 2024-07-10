@@ -38,7 +38,7 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
     paintScreenVM.firstBuild = true;
     paintScreenVM.timer.cancel();
     paintScreenVM.roomData.updateDataOfRoom(null);
-    // paintScreenVM.leave();
+    paintScreenVM.leave();
     ref.read(paintScreenVMprovider).dispose();
     super.dispose();
   }
@@ -77,11 +77,13 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
   }
 
   void onFirstBuild(PaintScreenVM paintScreenVM) {
+    //isJoin means true means someone is still left to join
+    if (paintScreenVM.roomData.dataOfRoom?['isJoin'] == true) {
+      return;
+    }
     paintScreenVM
         .renderHiddenTextWidget(paintScreenVM.roomData.dataOfRoom?['word']);
-    if (paintScreenVM.roomData.dataOfRoom?['isJoin'] != true) {
-      paintScreenVM.startTimer();
-    }
+    paintScreenVM.startTimer();
     paintScreenVM.firstBuild = false;
   }
 
