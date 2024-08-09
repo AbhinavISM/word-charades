@@ -27,9 +27,9 @@ Better synhronisation - running timers and calculating scores on the server inst
 
 <img width="180" height="350" src="https://github.com/user-attachments/assets/44f16f7d-cbc7-4574-b014-cb3f00a4d7c3"/>
 <img width="180" height="350" src="https://github.com/user-attachments/assets/ee04067c-9922-46bc-876e-a7ad5b6c6eb1"/>
+<img width="180" height="350" src="https://github.com/user-attachments/assets/a37b3569-6606-48ce-a4d2-433a23fd0818"/>
+<img width="180" height="350" src="https://github.com/user-attachments/assets/dfbde326-4259-44a5-a6da-7b85ca9b7102"/>
+<img width="180" height="350" src="https://github.com/user-attachments/assets/35ff42d1-2ba9-4f25-a960-60ab073ffe16"/>
 <img width="180" height="350" src="https://github.com/user-attachments/assets/50f4acb0-e946-49fd-891a-e8f655a11548"/>
 <img width="180" height="350" src="https://github.com/user-attachments/assets/d25a00ee-983c-48d8-b8eb-6506e186cbfa"/>
 <img width="180" height="350" src="https://github.com/user-attachments/assets/14c103be-859c-4d80-b6c2-5032f118bc08"/>
-<img width="180" height="350" src="https://github.com/user-attachments/assets/35ff42d1-2ba9-4f25-a960-60ab073ffe16"/>
-<img width="180" height="350" src="https://github.com/user-attachments/assets/dfbde326-4259-44a5-a6da-7b85ca9b7102"/>
-<img width="180" height="350" src="https://github.com/user-attachments/assets/a37b3569-6606-48ce-a4d2-433a23fd0818"/>
