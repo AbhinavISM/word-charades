@@ -2,8 +2,6 @@ const express = require("express");
 const app = express();
 const PORT = 4000;
 
-// bad line causes error in websocket connection
-// var server = http.createServer(app);
 function convertStringToDate(dateTimeString) {
     var [datePart, timePart] = dateTimeString.split(' '); // Split the date and time parts
     var [hhmmss, ms] = timePart.split('.');
@@ -14,7 +12,8 @@ function convertStringToDate(dateTimeString) {
     var dateObject = new Date(datePart+"T"+hhmmss+"+05:30");
   
     return dateObject;
-  }
+}
+
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('server started and running at port ' + PORT);
 });

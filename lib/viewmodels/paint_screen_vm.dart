@@ -70,8 +70,6 @@ class PaintScreenVM extends ChangeNotifier {
   late RtcEngine agoraEngine;
   String token = '';
   int uid = 0; // uid of the local user
-  int? _remoteUid; // uid of the remote user
-  bool _isJoined = false; // Indicates if the local user has joined the channel
   Future<void> setupVoiceSDKEngine() async {
     // retrieve or request microphone permission
     await [Permission.microphone].request();
@@ -83,16 +81,10 @@ class PaintScreenVM extends ChangeNotifier {
     // Register the event handler
     agoraEngine.registerEventHandler(
       RtcEngineEventHandler(
-        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
-          _isJoined = true;
-        },
-        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {
-          _remoteUid = remoteUid;
-        },
+        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {},
+        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {},
         onUserOffline: (RtcConnection connection, int remoteUid,
-            UserOfflineReasonType reason) {
-          _remoteUid = null;
-        },
+            UserOfflineReasonType reason) {},
       ),
     );
     join();
@@ -121,8 +113,6 @@ class PaintScreenVM extends ChangeNotifier {
   }
 
   void leave() async {
-    _isJoined = false;
-    _remoteUid = null;
     await agoraEngine.leaveChannel();
   }
 
@@ -215,7 +205,6 @@ class PaintScreenVM extends ChangeNotifier {
 
   void changeTurnEx(Map data) {
     print('client change turn called');
-    String oldword = roomData.dataOfRoom?['word'];
     print(data.toString());
     roomData.updateDataOfRoom(data);
     renderHiddenTextWidget(roomData.dataOfRoom?['word']);
