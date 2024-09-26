@@ -6,8 +6,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
 import 'package:yayscribbl/viewmodels/room_data_provider.dart';
 
-import '../models/touch_points.dart';
-
 const String appId = "241714311a2a48569fd152d4411e5a9b";
 
 class PaintScreenVM extends ChangeNotifier {
@@ -20,7 +18,8 @@ class PaintScreenVM extends ChangeNotifier {
   }
   bool firstBuild = true;
   late String nickName;
-  List<TouchPoints?> points = [];
+  List<Path> paths = [];
+  List<Paint> pathPaints = [];
   StrokeCap strokeType = StrokeCap.round;
   Color selectedColor = Colors.black;
   double opacity = 1;
@@ -91,12 +90,6 @@ class PaintScreenVM extends ChangeNotifier {
   }
 
   void join() async {
-    // for (int i = 0; i < roomData.dataOfRoom?['players'].length; i++) {
-    //   if (roomData.dataOfRoom?['players'][i]['nick_name'] == nickName) {
-    //     uid = i;
-    //     break;
-    //   }
-    // }
     uid = DateTime.now().millisecondsSinceEpoch;
     // Set channel options including the client role and channel profile
     ChannelMediaOptions options = const ChannelMediaOptions(
@@ -152,20 +145,31 @@ class PaintScreenVM extends ChangeNotifier {
 
   void pointsToDrawEx(Map point) {
     if (point['details'] != null) {
-      points.add(TouchPoints(
-        paint: Paint()
+      if (paths.isEmpty) {
+        paths.add(Path());
+        pathPaints.add(Paint()
           ..strokeCap = strokeType
           ..isAntiAlias = true
           ..color = selectedColor.withOpacity(opacity)
-          ..strokeWidth = strokeWidth,
-        point: Offset(
-          (point['details']['dx'] as double),
-          (point['details']['dy'] as double),
-        ),
-      ));
+          ..strokeWidth = strokeWidth
+          ..style = PaintingStyle.stroke
+          ..strokeJoin = StrokeJoin.bevel);
+      }
+      if (paths.last.getBounds().isEmpty) {
+        paths.last.moveTo(point['details']['dx'], point['details']['dy']);
+      } else {
+        paths.last.lineTo(point['details']['dx'], point['details']['dy']);
+      }
     } else {
+      paths.add(Path());
+      pathPaints.add(Paint()
+        ..strokeCap = strokeType
+        ..isAntiAlias = true
+        ..color = selectedColor.withOpacity(opacity)
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeJoin = StrokeJoin.bevel);
       print('null point aaya');
-      points.add(null);
     }
 
     notifyListeners();
@@ -173,16 +177,53 @@ class PaintScreenVM extends ChangeNotifier {
 
   void updatedColorEx(Color updatedColor) {
     selectedColor = updatedColor;
+    if (paths.isEmpty || !paths.last.getBounds().isEmpty) {
+      paths.add(Path());
+      pathPaints.add(Paint()
+        ..strokeCap = strokeType
+        ..isAntiAlias = true
+        ..color = selectedColor.withOpacity(opacity)
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeJoin = StrokeJoin.bevel);
+    } else {
+      pathPaints.last = Paint()
+        ..strokeCap = strokeType
+        ..isAntiAlias = true
+        ..color = selectedColor.withOpacity(opacity)
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeJoin = StrokeJoin.bevel;
+    }
     notifyListeners();
   }
 
   void strokeWidthEx(double sw) {
     strokeWidth = sw;
+    if (paths.isEmpty || !paths.last.getBounds().isEmpty) {
+      paths.add(Path());
+      pathPaints.add(Paint()
+        ..strokeCap = strokeType
+        ..isAntiAlias = true
+        ..color = selectedColor.withOpacity(opacity)
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeJoin = StrokeJoin.bevel);
+    } else {
+      pathPaints.last = Paint()
+        ..strokeCap = strokeType
+        ..isAntiAlias = true
+        ..color = selectedColor.withOpacity(opacity)
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeJoin = StrokeJoin.bevel;
+    }
     notifyListeners();
   }
 
   void eraseAllEx() {
-    points.clear();
+    paths.clear();
+    pathPaints.clear();
     notifyListeners();
   }
 
@@ -210,7 +251,8 @@ class PaintScreenVM extends ChangeNotifier {
     renderHiddenTextWidget(roomData.dataOfRoom?['word']);
     guessedUserCounter = 0;
     timeLeft = 60;
-    points.clear();
+    paths.clear();
+    pathPaints.clear();
     alreadyGuessedByMe = false;
     timer.cancel();
     startTimer();

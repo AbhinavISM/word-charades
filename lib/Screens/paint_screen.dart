@@ -184,7 +184,10 @@ class _PaintScreenState extends ConsumerState<PaintScreen> {
                                         child: CustomPaint(
                                           size: Size.infinite,
                                           painter: MyCustomPainter(
-                                              pointsList: paintScreenVM.points),
+                                            paths: paintScreenVM.paths,
+                                            pathPaints:
+                                                paintScreenVM.pathPaints,
+                                          ),
                                         ),
                                       ),
                                     ),
