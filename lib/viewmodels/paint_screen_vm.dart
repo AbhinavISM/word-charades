@@ -143,17 +143,21 @@ class PaintScreenVM extends ChangeNotifier {
     notifyListeners();
   }
 
+  Paint createPaint() {
+    return Paint()
+      ..strokeCap = strokeType
+      ..isAntiAlias = true
+      ..color = selectedColor.withOpacity(opacity)
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeJoin = StrokeJoin.bevel;
+  }
+
   void pointsToDrawEx(Map point) {
     if (point['details'] != null) {
       if (paths.isEmpty) {
         paths.add(Path());
-        pathPaints.add(Paint()
-          ..strokeCap = strokeType
-          ..isAntiAlias = true
-          ..color = selectedColor.withOpacity(opacity)
-          ..strokeWidth = strokeWidth
-          ..style = PaintingStyle.stroke
-          ..strokeJoin = StrokeJoin.bevel);
+        pathPaints.add(createPaint());
       }
       if (paths.last.getBounds().isEmpty) {
         paths.last.moveTo(point['details']['dx'], point['details']['dy']);
@@ -162,13 +166,7 @@ class PaintScreenVM extends ChangeNotifier {
       }
     } else {
       paths.add(Path());
-      pathPaints.add(Paint()
-        ..strokeCap = strokeType
-        ..isAntiAlias = true
-        ..color = selectedColor.withOpacity(opacity)
-        ..strokeWidth = strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeJoin = StrokeJoin.bevel);
+      pathPaints.add(createPaint());
       print('null point aaya');
     }
 
@@ -179,21 +177,9 @@ class PaintScreenVM extends ChangeNotifier {
     selectedColor = updatedColor;
     if (paths.isEmpty || !paths.last.getBounds().isEmpty) {
       paths.add(Path());
-      pathPaints.add(Paint()
-        ..strokeCap = strokeType
-        ..isAntiAlias = true
-        ..color = selectedColor.withOpacity(opacity)
-        ..strokeWidth = strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeJoin = StrokeJoin.bevel);
+      pathPaints.add(createPaint());
     } else {
-      pathPaints.last = Paint()
-        ..strokeCap = strokeType
-        ..isAntiAlias = true
-        ..color = selectedColor.withOpacity(opacity)
-        ..strokeWidth = strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeJoin = StrokeJoin.bevel;
+      pathPaints.last = createPaint();
     }
     notifyListeners();
   }
@@ -202,21 +188,9 @@ class PaintScreenVM extends ChangeNotifier {
     strokeWidth = sw;
     if (paths.isEmpty || !paths.last.getBounds().isEmpty) {
       paths.add(Path());
-      pathPaints.add(Paint()
-        ..strokeCap = strokeType
-        ..isAntiAlias = true
-        ..color = selectedColor.withOpacity(opacity)
-        ..strokeWidth = strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeJoin = StrokeJoin.bevel);
+      pathPaints.add(createPaint());
     } else {
-      pathPaints.last = Paint()
-        ..strokeCap = strokeType
-        ..isAntiAlias = true
-        ..color = selectedColor.withOpacity(opacity)
-        ..strokeWidth = strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeJoin = StrokeJoin.bevel;
+      pathPaints.last = createPaint();
     }
     notifyListeners();
   }
