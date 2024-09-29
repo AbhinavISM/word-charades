@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:yayscribbl/Screens/final_leader_board.dart';
-import 'package:yayscribbl/Screens/waiting_screen.dart';
 import 'package:yayscribbl/main.dart';
-import 'package:yayscribbl/viewmodels/paint_screen_vm.dart';
+import 'package:yayscribbl/presentation/finish_game/final_leader_board.dart';
+import 'package:yayscribbl/presentation/game/paint_screen_vm.dart';
+import 'package:yayscribbl/presentation/waiting/waiting_screen.dart';
 
-import '../models/my_custom_painter.dart';
-import '../widgets/my_clipper.dart';
-import '../widgets/side_drawer.dart';
+import '../../widgets/side_drawer.dart';
+import 'my_clipper.dart';
+import 'my_custom_painter.dart';
 
 class PaintScreen extends ConsumerStatefulWidget {
   const PaintScreen({super.key});

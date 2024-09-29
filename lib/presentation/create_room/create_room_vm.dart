@@ -1,49 +1,66 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:yayscribbl/models/room_data_provider.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
-import 'package:yayscribbl/viewmodels/room_data_provider.dart';
 
-class JoinRoomVM extends ChangeNotifier {
+class CreateRoomVM extends ChangeNotifier {
   final RoomData roomData;
   final SocketRepository socketRepository;
   final GlobalKey<NavigatorState> navigatorKey;
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
-  JoinRoomVM(this.roomData, this.socketRepository, this.navigatorKey,
+  CreateRoomVM(this.roomData, this.socketRepository, this.navigatorKey,
       this.scaffoldMessengerKey) {
     socketRepository.notCorrectGameListener(notCorrectGameEx);
   }
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController roomController = TextEditingController();
-  String? maxRounds;
-  String? roomSize;
+  String? _maxRounds;
+  String? _roomSize;
+  get getMaxRounds => _maxRounds;
+  get getRoomSize => _roomSize;
+  set setMaxRounds(String? maxRounds) {
+    _maxRounds = maxRounds;
+    notifyListeners();
+  }
+
+  set setRoomSize(String? roomSize) {
+    _roomSize = roomSize;
+    notifyListeners();
+  }
+
   // bool showProgressBar = false;
   final StreamController<bool> showProgressBarController =
       StreamController.broadcast();
 
-  void joinRoom() {
-    if (nameController.text.isNotEmpty && roomController.text.isNotEmpty) {
+  void createRoom() {
+    if (nameController.text.isNotEmpty &&
+        roomController.text.isNotEmpty &&
+        _maxRounds != null &&
+        _roomSize != null) {
       // showProgressBar = true;
       showProgressBarController.sink.add(true);
-
       notifyListeners();
-      socketRepository.joinGame({
+      print('already connected');
+      socketRepository.createGame({
         "nick_name": nameController.text,
         "room_name": roomController.text,
-        "screen_from": 'join_room_screen',
+        "room_size": _roomSize,
+        "max_rounds": _maxRounds,
+        "screen_from": 'create_room_screen',
       });
       socketRepository.updateRoomListener(updateRoomUI);
     }
   }
 
   void updateRoomUI(Map dataOfRoom) {
-    // joinRoomVM.showProgressBar = false;
+    // createRoomVM.showProgressBar = false;
     showProgressBarController.sink.add(false);
     roomData.updateDataOfRoom(dataOfRoom);
     // print(Provider.of<RoomData>(context).dataOfRoom.toString());
-    // Navigator.of(context)
-    //     .pushNamed('/paint_screen', arguments: joinRoomVM.nameController.text);
+    // Navigator.of(context).pushNamed('/paint_screen',
+    //     arguments: createRoomVM.nameController.text);
     navigatorKey.currentState
         ?.pushNamed('/paint_screen', arguments: nameController.text);
   }

@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:socket_io_client/socket_io_client.dart';
-import 'package:yayscribbl/socket_client.dart';
+import 'package:yayscribbl/repository/socket_client.dart';
 
 class SocketRepository {
   final socket = SocketClient.instance.socket;

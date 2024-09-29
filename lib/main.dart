@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:yayscribbl/Screens/create_room_screen.dart';
-import 'package:yayscribbl/Screens/home_screen.dart';
-import 'package:yayscribbl/Screens/join_room_screen.dart';
-import 'package:yayscribbl/Screens/paint_screen.dart';
+import 'package:yayscribbl/models/room_data_provider.dart';
+import 'package:yayscribbl/presentation/create_room/create_room_screen.dart';
+import 'package:yayscribbl/presentation/create_room/create_room_vm.dart';
+import 'package:yayscribbl/presentation/game/paint_screen.dart';
+import 'package:yayscribbl/presentation/game/paint_screen_vm.dart';
+import 'package:yayscribbl/presentation/home/home_screen.dart';
+import 'package:yayscribbl/presentation/join_room/join_room_screen.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
-import 'package:yayscribbl/viewmodels/create_room_vm.dart';
-import 'package:yayscribbl/viewmodels/paint_screen_vm.dart';
-import 'package:yayscribbl/viewmodels/room_data_provider.dart';
 
-import 'viewmodels/join_room_vm.dart';
+import 'presentation/join_room/join_room_vm.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));

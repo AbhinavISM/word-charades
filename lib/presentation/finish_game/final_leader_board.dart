@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:yayscribbl/Screens/home_screen.dart';
+import 'package:yayscribbl/presentation/home/home_screen.dart';
 
 class FinalLeaderBoard extends StatelessWidget {
   final List players_list;
