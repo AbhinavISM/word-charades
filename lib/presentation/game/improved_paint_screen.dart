@@ -188,48 +188,62 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
     );
   }
 
+  void _emitPoints(PaintScreenVM paintScreenVM, double dx, double dy,
+      double canvasWidth, double canvasHeight) {
+    double normalizedX = dx / canvasWidth;
+    double normalizedY = dy / canvasHeight;
+    print('normalizedx : $normalizedX , normalizedY : $normalizedY\n');
+    paintScreenVM.socketRepository.socket?.emit('paint', {
+      'details': {
+        'dx': normalizedX.toDouble(),
+        'dy': normalizedY.toDouble(),
+        'drawing_width': canvasWidth.toDouble(),
+        'drawing_height': canvasHeight.toDouble(),
+      },
+      'room_name': paintScreenVM.roomData.dataOfRoom?['room_name'],
+    });
+  }
+
   Widget _buildDrawingArea(PaintScreenVM paintScreenVM) {
-    return GestureDetector(
-      onPanUpdate: paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] ==
-              paintScreenVM.nickName
-          ? (details) {
-              print(details.localPosition.dx);
-              paintScreenVM.socketRepository.socket?.emit('paint', {
-                'details': {
-                  'dx': details.localPosition.dx,
-                  'dy': details.localPosition.dy,
-                },
-                'room_name': paintScreenVM.roomData.dataOfRoom?['room_name'],
-              });
-            }
-          : (details) {},
-      onPanStart: paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] ==
-              paintScreenVM.nickName
-          ? (details) {
-              print(details.localPosition.dx);
-              paintScreenVM.socketRepository.socket?.emit('paint', {
-                'details': {
-                  'dx': details.localPosition.dx,
-                  'dy': details.localPosition.dy,
-                },
-                'room_name': paintScreenVM.roomData.dataOfRoom?['room_name'],
-              });
-            }
-          : (details) {},
-      onPanEnd: paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] ==
-              paintScreenVM.nickName
-          ? (details) {
-              paintScreenVM.socketRepository.socket?.emit('paint', {
-                'details': null,
-                'room_name': paintScreenVM.roomData.dataOfRoom?['room_name'],
-              });
-            }
-          : (details) {},
-      child: SizedBox.expand(
-        child: RepaintBoundary(
-          child: LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              return ClipRect(
+    return SizedBox.expand(
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          paintScreenVM.canvasWidth = constraints.maxWidth;
+          paintScreenVM.canvasHeight = constraints.maxHeight;
+          return GestureDetector(
+            onPanUpdate: (details) {
+              if (paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] ==
+                  paintScreenVM.nickName) {
+                _emitPoints(
+                    paintScreenVM,
+                    details.localPosition.dx,
+                    details.localPosition.dy,
+                    constraints.maxWidth,
+                    constraints.maxHeight);
+              }
+            },
+            onPanStart: (details) {
+              if (paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] ==
+                  paintScreenVM.nickName) {
+                _emitPoints(
+                    paintScreenVM,
+                    details.localPosition.dx,
+                    details.localPosition.dy,
+                    constraints.maxWidth,
+                    constraints.maxHeight);
+              }
+            },
+            onPanEnd: (details) {
+              if (paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] ==
+                  paintScreenVM.nickName) {
+                paintScreenVM.socketRepository.socket?.emit('paint', {
+                  'details': null,
+                  'room_name': paintScreenVM.roomData.dataOfRoom?['room_name'],
+                });
+              }
+            },
+            child: RepaintBoundary(
+              child: ClipRect(
                 clipper: MyClipper(
                     height: constraints.maxHeight, width: constraints.maxWidth),
                 child: CustomPaint(
@@ -239,10 +253,10 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
                     pathPaints: paintScreenVM.pathPaints,
                   ),
                 ),
-              );
-            },
-          ),
-        ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

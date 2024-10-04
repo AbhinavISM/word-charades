@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
@@ -12,10 +13,13 @@ class PaintScreenVM extends ChangeNotifier {
   final RoomData roomData;
   final SocketRepository socketRepository;
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
+
   PaintScreenVM(
       this.roomData, this.socketRepository, this.scaffoldMessengerKey) {
     connect();
   }
+  double? canvasWidth;
+  double? canvasHeight;
   bool firstBuild = true;
   late String nickName;
   List<Path> paths = [];
@@ -155,14 +159,37 @@ class PaintScreenVM extends ChangeNotifier {
 
   void pointsToDrawEx(Map point) {
     if (point['details'] != null) {
+      double normalizedX = (point['details']['dx'] as num).toDouble();
+      double normalizedY = (point['details']['dy'] as num).toDouble();
+      double drawingUserScreenWidth =
+          (point['details']['drawing_width'] as num).toDouble();
+      double drawingUserScreenHeight =
+          (point['details']['drawing_height'] as num).toDouble();
+
+      double widthRatio = canvasWidth! / drawingUserScreenWidth;
+      double heightRatio = canvasHeight! / drawingUserScreenHeight;
+      double scaleFactor = min(widthRatio, heightRatio);
+
+      double scaledX = normalizedX * drawingUserScreenWidth * scaleFactor;
+      double scaledY = normalizedY * drawingUserScreenHeight * scaleFactor;
+
+      double xOffset =
+          (canvasWidth! - drawingUserScreenWidth * scaleFactor) / 2;
+      double yOffset =
+          (canvasHeight! - drawingUserScreenHeight * scaleFactor) / 2;
+
+      double finalX = scaledX + xOffset;
+      double finalY = scaledY + yOffset;
+
+      print('finalx : $finalX , finaly : $finalY\n');
       if (paths.isEmpty) {
         paths.add(Path());
         pathPaints.add(createPaint());
       }
       if (paths.last.getBounds().isEmpty) {
-        paths.last.moveTo(point['details']['dx'], point['details']['dy']);
+        paths.last.moveTo(finalX, finalY);
       } else {
-        paths.last.lineTo(point['details']['dx'], point['details']['dy']);
+        paths.last.lineTo(finalX, finalY);
       }
     } else {
       paths.add(Path());
