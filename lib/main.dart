@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:yayscribbl/models/room_data_provider.dart';
 import 'package:yayscribbl/presentation/create_room/create_room_screen.dart';
 import 'package:yayscribbl/presentation/create_room/create_room_vm.dart';
-import 'package:yayscribbl/presentation/game/paint_screen.dart';
+import 'package:yayscribbl/presentation/game/improved_paint_screen.dart';
 import 'package:yayscribbl/presentation/game/paint_screen_vm.dart';
 import 'package:yayscribbl/presentation/home/home_screen.dart';
 import 'package:yayscribbl/presentation/join_room/join_room_screen.dart';
@@ -65,6 +66,9 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
+      theme: ThemeData(
+        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
+      ),
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: ref.watch(scaffoldMessengerKeyProvider),
@@ -73,7 +77,7 @@ class MyApp extends ConsumerWidget {
       routes: {
         '/create_room_screen': (ctx) => const CreateRoomScreen(),
         '/join_room_screen': (ctx) => const JoinRoomScreen(),
-        '/paint_screen': (context) => const PaintScreen(),
+        '/paint_screen': (context) => const ImprovedPaintScreen(),
       },
     );
   }
