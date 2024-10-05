@@ -190,13 +190,11 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
 
   void _emitPoints(PaintScreenVM paintScreenVM, double dx, double dy,
       double canvasWidth, double canvasHeight) {
-    double normalizedX = dx / canvasWidth;
-    double normalizedY = dy / canvasHeight;
-    print('normalizedx : $normalizedX , normalizedY : $normalizedY\n');
+    print('normalizedx : $dx , normalizedY : $dy\n');
     paintScreenVM.socketRepository.socket?.emit('paint', {
       'details': {
-        'dx': normalizedX.toDouble(),
-        'dy': normalizedY.toDouble(),
+        'dx': dx.toDouble(),
+        'dy': dy.toDouble(),
         'drawing_width': canvasWidth.toDouble(),
         'drawing_height': canvasHeight.toDouble(),
       },
@@ -208,6 +206,10 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
     return SizedBox.expand(
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
+          if (paintScreenVM.canvasWidth != constraints.maxWidth ||
+              paintScreenVM.canvasHeight != constraints.maxHeight) {
+            paintScreenVM.resizeDrawing();
+          }
           paintScreenVM.canvasWidth = constraints.maxWidth;
           paintScreenVM.canvasHeight = constraints.maxHeight;
           return GestureDetector(

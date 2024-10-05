@@ -24,6 +24,7 @@ class PaintScreenVM extends ChangeNotifier {
   late String nickName;
   List<Path> paths = [];
   List<Paint> pathPaints = [];
+  List<List<Map>> pathPoints = [];
   StrokeCap strokeType = StrokeCap.round;
   Color selectedColor = Colors.black;
   double opacity = 1;
@@ -157,10 +158,47 @@ class PaintScreenVM extends ChangeNotifier {
       ..strokeJoin = StrokeJoin.bevel;
   }
 
+  void resizeDrawing() {
+    paths = [];
+    for (List<Map> points in pathPoints) {
+      paths.add(Path());
+      for (int i = 0; i < points.length; i++) {
+        Map point = points[i];
+        double dx = (point['details']['dx'] as num).toDouble();
+        double dy = (point['details']['dy'] as num).toDouble();
+        double drawingUserScreenWidth =
+            (point['details']['drawing_width'] as num).toDouble();
+        double drawingUserScreenHeight =
+            (point['details']['drawing_height'] as num).toDouble();
+
+        double widthRatio = canvasWidth! / drawingUserScreenWidth;
+        double heightRatio = canvasHeight! / drawingUserScreenHeight;
+        double scaleFactor = min(widthRatio, heightRatio);
+
+        double scaledX = dx * scaleFactor;
+        double scaledY = dy * scaleFactor;
+
+        double xOffset =
+            (canvasWidth! - drawingUserScreenWidth * scaleFactor) / 2;
+        double yOffset =
+            (canvasHeight! - drawingUserScreenHeight * scaleFactor) / 2;
+
+        double finalX = scaledX + xOffset;
+        double finalY = scaledY + yOffset;
+        if (i == 0) {
+          paths.last.moveTo(finalX, finalY);
+        } else {
+          paths.last.lineTo(finalX, finalY);
+        }
+      }
+    }
+    notifyListeners();
+  }
+
   void pointsToDrawEx(Map point) {
     if (point['details'] != null) {
-      double normalizedX = (point['details']['dx'] as num).toDouble();
-      double normalizedY = (point['details']['dy'] as num).toDouble();
+      double dx = (point['details']['dx'] as num).toDouble();
+      double dy = (point['details']['dy'] as num).toDouble();
       double drawingUserScreenWidth =
           (point['details']['drawing_width'] as num).toDouble();
       double drawingUserScreenHeight =
@@ -170,8 +208,8 @@ class PaintScreenVM extends ChangeNotifier {
       double heightRatio = canvasHeight! / drawingUserScreenHeight;
       double scaleFactor = min(widthRatio, heightRatio);
 
-      double scaledX = normalizedX * drawingUserScreenWidth * scaleFactor;
-      double scaledY = normalizedY * drawingUserScreenHeight * scaleFactor;
+      double scaledX = dx * scaleFactor;
+      double scaledY = dy * scaleFactor;
 
       double xOffset =
           (canvasWidth! - drawingUserScreenWidth * scaleFactor) / 2;
@@ -185,15 +223,19 @@ class PaintScreenVM extends ChangeNotifier {
       if (paths.isEmpty) {
         paths.add(Path());
         pathPaints.add(createPaint());
+        pathPoints.add([]);
       }
       if (paths.last.getBounds().isEmpty) {
         paths.last.moveTo(finalX, finalY);
+        pathPoints.last.add(point);
       } else {
         paths.last.lineTo(finalX, finalY);
+        pathPoints.last.add(point);
       }
     } else {
       paths.add(Path());
       pathPaints.add(createPaint());
+      pathPoints.add([]);
       print('null point aaya');
     }
 
@@ -205,6 +247,7 @@ class PaintScreenVM extends ChangeNotifier {
     if (paths.isEmpty || !paths.last.getBounds().isEmpty) {
       paths.add(Path());
       pathPaints.add(createPaint());
+      pathPoints.add([]);
     } else {
       pathPaints.last = createPaint();
     }
@@ -216,6 +259,7 @@ class PaintScreenVM extends ChangeNotifier {
     if (paths.isEmpty || !paths.last.getBounds().isEmpty) {
       paths.add(Path());
       pathPaints.add(createPaint());
+      pathPoints.add([]);
     } else {
       pathPaints.last = createPaint();
     }
@@ -225,6 +269,7 @@ class PaintScreenVM extends ChangeNotifier {
   void eraseAllEx() {
     paths.clear();
     pathPaints.clear();
+    pathPoints.clear();
     notifyListeners();
   }
 
@@ -254,6 +299,7 @@ class PaintScreenVM extends ChangeNotifier {
     timeLeft = 60;
     paths.clear();
     pathPaints.clear();
+    pathPoints.clear();
     alreadyGuessedByMe = false;
     timer.cancel();
     startTimer();
