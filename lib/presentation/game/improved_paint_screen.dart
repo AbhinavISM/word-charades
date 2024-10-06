@@ -67,6 +67,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
 
     return Scaffold(
       drawer: _buildDrawer(paintScreenVM),
+      floatingActionButton: _timerFloatingActionButton(paintScreenVM),
       key: paintScreenVM.scaffoldKey,
       body: paintScreenVM.roomData.dataOfRoom != null
           ? paintScreenVM.roomData.dataOfRoom!['isJoin'] != true
@@ -81,7 +82,6 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
           : const Center(
               child: CircularProgressIndicator(),
             ),
-      floatingActionButton: _timerFloatingActionButton(paintScreenVM),
     );
   }
 
@@ -330,17 +330,6 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
     );
   }
 
-  Widget _buildChatArea(PaintScreenVM paintScreenVM) {
-    return ListView.builder(
-      controller: paintScreenVM.scrollController,
-      shrinkWrap: true,
-      itemCount: paintScreenVM.messages.length,
-      itemBuilder: (context, index) {
-        return _buildChatMessage(paintScreenVM, index);
-      },
-    );
-  }
-
   Widget _buildChatMessage(PaintScreenVM paintScreenVM, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12, left: 12, right: 12),
@@ -367,6 +356,17 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildChatArea(PaintScreenVM paintScreenVM) {
+    return ListView.builder(
+      controller: paintScreenVM.scrollController,
+      shrinkWrap: true,
+      itemCount: paintScreenVM.messages.length,
+      itemBuilder: (context, index) {
+        return _buildChatMessage(paintScreenVM, index);
+      },
     );
   }
 
