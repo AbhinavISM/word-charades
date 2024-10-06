@@ -250,9 +250,9 @@ io.on('connection', (socket) => {
             }
             room = await room.save();
             if(room.players.length === 1){
-                socket.broadcast.to(room.room_name).emit('show_leader_board', {dataOfRoom : room, playerWhoDisconnected : whoDisconnected});
+                socket.broadcast.to(room.room_name).emit('show_leader_board', room);
             }else{
-                socket.broadcast.to(room.room_name).emit('user_disconnected', room);
+                socket.broadcast.to(room.room_name).emit('user_disconnected', {dataOfRoom : room, playerWhoDisconnected : whoDisconnected});
             }
         } catch(err){
             console.log(err);
