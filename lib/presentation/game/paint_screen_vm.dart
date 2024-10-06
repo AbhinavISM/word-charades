@@ -139,10 +139,10 @@ class PaintScreenVM extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateRoomEx(Map data) {
-    roomData.updateDataOfRoom(data);
-    renderHiddenTextWidget(data['word']);
-    if (data['isJoin'] != true) {
+  void updateRoomEx(Map roomAndPlayer) {
+    roomData.updateDataOfRoom(roomAndPlayer['dataOfRoom']);
+    renderHiddenTextWidget(roomAndPlayer['dataOfRoom']['word']);
+    if (roomAndPlayer['dataOfRoom']['isJoin'] != true) {
       startTimer();
     }
     notifyListeners();
