@@ -54,15 +54,15 @@ class CreateRoomVM extends ChangeNotifier {
     }
   }
 
-  void updateRoomUI(Map dataOfRoom) {
+  void updateRoomUI(Map roomAndPlayer) {
     // createRoomVM.showProgressBar = false;
     showProgressBarController.sink.add(false);
-    roomData.updateDataOfRoom(dataOfRoom);
+    roomData.updateDataOfRoom(roomAndPlayer['dataOfRoom']);
     // print(Provider.of<RoomData>(context).dataOfRoom.toString());
     // Navigator.of(context).pushNamed('/paint_screen',
     //     arguments: createRoomVM.nameController.text);
     navigatorKey.currentState
-        ?.pushNamed('/paint_screen', arguments: nameController.text);
+        ?.pushNamed('/paint_screen', arguments: roomAndPlayer['thisPlayer']);
   }
 
   void notCorrectGameEx(String errMessage) {

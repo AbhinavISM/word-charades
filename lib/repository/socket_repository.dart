@@ -18,7 +18,7 @@ class SocketRepository {
     socket?.off('update_room');
     socket?.on('update_room', (roomAndPlayer) {
       print(roomAndPlayer);
-      fun(roomAndPlayer['dataOfRoom']);
+      fun(roomAndPlayer);
     });
   }
 
