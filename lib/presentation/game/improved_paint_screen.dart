@@ -42,39 +42,6 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
     super.dispose();
   }
 
-  void selectColor(PaintScreenVM paintScreenVM) {
-    showDialog(
-      context: context,
-      builder: ((context) => AlertDialog(
-            title: const Text('Choose Color'),
-            content: SingleChildScrollView(
-              child: BlockPicker(
-                pickerColor: paintScreenVM.selectedColor,
-                onColorChanged: ((color) {
-                  String colorString = color.toString();
-                  String valueString =
-                      colorString.split('(0x')[1].split(')')[0];
-                  Map map = {
-                    'color': valueString,
-                    'room_name': paintScreenVM.roomData.dataOfRoom?['room_name']
-                  };
-                  paintScreenVM.socketRepository.socket
-                      ?.emit('color_change', map);
-                }),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('Close'),
-              )
-            ],
-          )),
-    );
-  }
-
   void onFirstBuild(PaintScreenVM paintScreenVM) {
     //isJoin means true means someone is still left to join
     if (paintScreenVM.roomData.dataOfRoom?['isJoin'] == true) {
@@ -260,6 +227,39 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
           );
         },
       ),
+    );
+  }
+
+  void selectColor(PaintScreenVM paintScreenVM) {
+    showDialog(
+      context: context,
+      builder: ((context) => AlertDialog(
+            title: const Text('Choose Color'),
+            content: SingleChildScrollView(
+              child: BlockPicker(
+                pickerColor: paintScreenVM.selectedColor,
+                onColorChanged: ((color) {
+                  String colorString = color.toString();
+                  String valueString =
+                      colorString.split('(0x')[1].split(')')[0];
+                  Map map = {
+                    'color': valueString,
+                    'room_name': paintScreenVM.roomData.dataOfRoom?['room_name']
+                  };
+                  paintScreenVM.socketRepository.socket
+                      ?.emit('color_change', map);
+                }),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Close'),
+              )
+            ],
+          )),
     );
   }
 
