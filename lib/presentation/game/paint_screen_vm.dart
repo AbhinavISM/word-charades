@@ -58,6 +58,7 @@ class PaintScreenVM extends ChangeNotifier {
     socketRepository.msgListener(msgEx);
     socketRepository.changeTurnListener(changeTurnEx);
     socketRepository.closeInputListener(closeInputEx);
+    socketRepository.updateScoreListener(updateScoreEx);
     socketRepository.showLeaderBoardListener(showLeaderBoardEx);
     socketRepository.userDisconnectedListener(userDisonnectedEx);
     socketRepository.onDisconnectListener();
