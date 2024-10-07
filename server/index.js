@@ -35,6 +35,15 @@ mongoose.connect(db).then(() => {
     console.log(e);
 });
 
+//socket.emit() -> send to sender only
+//io.emit() -> send to everyone
+//socket.broadcast.emit() -> send to everyone except sender
+//socket.broadcast.to(room_name).emit() -> send to everyone except sender in room
+//io.to(room_name).emit() -> send to everyone in room
+//socket.to('room_name').emit() -> sending to sender client, only if its in room
+//socket.broadcast.to(socketid).emit() -> sending to individual socketid
+//for (var socketid in io.sockets.sockets) {} -> list socketid
+
 let roomsMap = new Map();
 let socketToRoomNameMap = new Map();
 class RoomClass {
@@ -154,7 +163,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('paint', ({details, room_name}) => {
-        io.to(room_name).emit('points_to_draw', {details: details});
+        socket.broadcast.to(room_name).emit('points_to_draw', {details: details});
     });
 
     socket.on('color_change', ({color, room_name}) => {

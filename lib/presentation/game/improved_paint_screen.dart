@@ -158,7 +158,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
   void _emitPoints(PaintScreenVM paintScreenVM, double dx, double dy,
       double canvasWidth, double canvasHeight) {
     print('normalizedx : $dx , normalizedY : $dy\n');
-    paintScreenVM.socketRepository.socket?.emit('paint', {
+    Map point = {
       'details': {
         'dx': dx.toDouble(),
         'dy': dy.toDouble(),
@@ -166,7 +166,9 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
         'drawing_height': canvasHeight.toDouble(),
       },
       'room_name': paintScreenVM.roomDataWrap.roomData!.roomName,
-    });
+    };
+    paintScreenVM.socketRepository.socket?.emit('paint', point);
+    paintScreenVM.pointsToDrawEx(point);
   }
 
   Widget _buildDrawingArea(PaintScreenVM paintScreenVM) {
@@ -205,10 +207,12 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
             onPanEnd: (details) {
               if (paintScreenVM.roomDataWrap.roomData!.turn.nickName ==
                   paintScreenVM.nickName) {
-                paintScreenVM.socketRepository.socket?.emit('paint', {
+                Map point = {
                   'details': null,
                   'room_name': paintScreenVM.roomDataWrap.roomData!.roomName,
-                });
+                };
+                paintScreenVM.socketRepository.socket?.emit('paint', point);
+                paintScreenVM.pointsToDrawEx(point);
               }
             },
             child: RepaintBoundary(
