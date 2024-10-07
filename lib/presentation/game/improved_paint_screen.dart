@@ -43,8 +43,8 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
   }
 
   void onFirstBuild(PaintScreenVM paintScreenVM) {
-    //isJoin means true means someone is still left to join
-    if (paintScreenVM.roomData.dataOfRoom?['isJoin'] == true) {
+    //can_join means true means someone is still left to join
+    if (paintScreenVM.roomData.dataOfRoom?['can_join'] == true) {
       return;
     }
     paintScreenVM
@@ -70,7 +70,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
       floatingActionButton: _timerFloatingActionButton(paintScreenVM),
       key: paintScreenVM.scaffoldKey,
       body: paintScreenVM.roomData.dataOfRoom != null
-          ? paintScreenVM.roomData.dataOfRoom!['isJoin'] != true
+          ? paintScreenVM.roomData.dataOfRoom!['can_join'] != true
               ? _buildGame(paintScreenVM)
               : WaitingScreen(
                   room_name: paintScreenVM.roomData.dataOfRoom?['room_name'],

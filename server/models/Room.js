@@ -21,18 +21,18 @@ const roomSchema = new mongoose.Schema({
         required: true,
         type: Number
     },
-    currentRound: {
+    current_round: {
         required: true,
         type: Number,
         default: 1,
     },
     players: [playerSchema],
-    isJoin: {
+    can_join: {
         type: Boolean,
         default: true,
     },
     turn: playerSchema,
-    turnIndex: {
+    turn_index: {
         type: Number,
         default: 0
     }

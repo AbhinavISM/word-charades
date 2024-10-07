@@ -94,9 +94,9 @@ io.on('connection', (socket) => {
             room.max_rounds = max_rounds;
 
             let player = {
-                socketID: socket.id,
+                socket_id: socket.id,
                 nick_name,
-                isPartyLeader: true,
+                is_room_leader: true,
             }
             room.players.push(player);
             room = await room.save();
@@ -126,19 +126,19 @@ io.on('connection', (socket) => {
                 return;
                 }
             }
-            if(room.isJoin){
+            if(room.can_join){
                 let player = {
-                    socketID: socket.id,
+                    socket_id: socket.id,
                     nick_name,
                 }
                 room.players.push(player);
                 socket.join(room_name);
 
                 if(room.players.length == room.room_size){
-                    room.isJoin = false;
+                    room.can_join = false;
                 }
 
-                room.turn = room.players[room.turnIndex];
+                room.turn = room.players[room.turn_index];
                 room = await room.save();
                 let playerToSend;
                 for(let i = 0; i<room.players.length; i++){
@@ -205,16 +205,16 @@ io.on('connection', (socket) => {
         console.log('server change turn called');
         try{
             let room = await Room.findOne({room_name});
-            // let turnIndex = room.turnIndex;
-            if(room.turnIndex+1 == room.players.length){
-                room.currentRound+=1;
-                console.log(room.currentRound.toString);
+            // let turn_index = room.turn_index;
+            if(room.turn_index+1 == room.players.length){
+                room.current_round+=1;
+                console.log(room.current_round.toString);
             }
-            if(room.currentRound<=room.max_rounds){
+            if(room.current_round<=room.max_rounds){
                 const word = await getWord();
                 room.word = word;
-                room.turnIndex = (room.turnIndex+1) % room.players.length;
-                room.turn = room.players[room.turnIndex];
+                room.turn_index = (room.turn_index+1) % room.players.length;
+                room.turn = room.players[room.turn_index];
                 room = await room.save();
                 console.log(room);
                 io.to(room_name).emit('change_turn', room);
@@ -240,10 +240,10 @@ io.on('connection', (socket) => {
     socket.on('disconnect', async()=>{
         console.log('someone disconnected');
         try{
-            let room = await Room.findOne({'players.socketID': socket.id});
+            let room = await Room.findOne({'players.socket_id': socket.id});
             let whoDisconnected;
             for(let i = 0; i<room.players.length; i++){
-                if(room.players[i].socketID === socket.id){
+                if(room.players[i].socket_id === socket.id){
                     whoDisconnected = room.players[i];
                     room.players.splice(i,1);
                 }

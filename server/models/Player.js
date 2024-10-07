@@ -5,10 +5,10 @@ const playerSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
-    socketID: {
+    socket_id: {
         type: String,
     },
-    isPartyLeader: {
+    is_room_leader: {
         type: Boolean,
         default: false
     },
