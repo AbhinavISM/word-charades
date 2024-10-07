@@ -1,15 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:yayscribbl/models/player_model.dart';
 import 'package:yayscribbl/models/room_data_provider.dart';
+import 'package:yayscribbl/models/room_model.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
 
 class CreateRoomVM extends ChangeNotifier {
-  final RoomData roomData;
+  final RoomDataWrap roomDataWrap;
   final SocketRepository socketRepository;
   final GlobalKey<NavigatorState> navigatorKey;
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
-  CreateRoomVM(this.roomData, this.socketRepository, this.navigatorKey,
+  CreateRoomVM(this.roomDataWrap, this.socketRepository, this.navigatorKey,
       this.scaffoldMessengerKey) {
     socketRepository.notCorrectGameListener(notCorrectGameEx);
   }
@@ -54,15 +56,15 @@ class CreateRoomVM extends ChangeNotifier {
     }
   }
 
-  void updateRoomUI(Map roomAndPlayer) {
+  void updateRoomUI(RoomModel roomData, PlayerModel player) {
     // createRoomVM.showProgressBar = false;
     showProgressBarController.sink.add(false);
-    roomData.updateDataOfRoom(roomAndPlayer['dataOfRoom']);
+    roomDataWrap.updateDataOfRoom(roomData);
     // print(Provider.of<RoomData>(context).dataOfRoom.toString());
     // Navigator.of(context).pushNamed('/paint_screen',
     //     arguments: createRoomVM.nameController.text);
-    navigatorKey.currentState?.pushNamed('/paint_screen',
-        arguments: roomAndPlayer['thisPlayer']['nick_name']);
+    navigatorKey.currentState
+        ?.pushNamed('/paint_screen', arguments: player.nickName);
   }
 
   void notCorrectGameEx(String errMessage) {

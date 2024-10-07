@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:yayscribbl/models/player_model.dart';
 
 class WaitingScreen extends StatelessWidget {
-  final current_room_size;
-  final room_size;
-  final room_name;
-  final players_list;
+  final int currentRoomSize;
+  final int roomSize;
+  final String roomName;
+  final List<PlayerModel> playersList;
 
   const WaitingScreen(
       {super.key,
-      required this.current_room_size,
-      required this.room_size,
-      required this.room_name,
-      required this.players_list});
+      required this.currentRoomSize,
+      required this.roomSize,
+      required this.roomName,
+      required this.playersList});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +26,7 @@ class WaitingScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(8),
             child: Text(
-              'waiting for ${room_size - current_room_size} players to join',
+              'waiting for ${roomSize - currentRoomSize} players to join',
               style: const TextStyle(fontSize: 24),
             ),
           ),
@@ -38,7 +39,7 @@ class WaitingScreen extends StatelessWidget {
               readOnly: true,
               onTap: (() {
                 Clipboard.setData(
-                  ClipboardData(text: room_name),
+                  ClipboardData(text: roomName),
                 );
                 ScaffoldMessenger.of(context)
                     .showSnackBar(const SnackBar(content: Text('Copied!')));
@@ -71,13 +72,13 @@ class WaitingScreen extends StatelessWidget {
                       fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 title: Text(
-                  players_list[index]['nick_name'],
+                  playersList[index].nickName,
                   style: const TextStyle(
                       fontSize: 24, fontWeight: FontWeight.bold),
                 ),
               );
             }),
-            itemCount: current_room_size,
+            itemCount: currentRoomSize,
           ),
         ],
       ),

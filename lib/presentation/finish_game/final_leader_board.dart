@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:yayscribbl/models/player_model.dart';
 import 'package:yayscribbl/presentation/home/home_screen.dart';
 
 class FinalLeaderBoard extends StatelessWidget {
-  final List players_list;
-  const FinalLeaderBoard({super.key, required this.players_list});
+  final List<PlayerModel> playersList;
+  const FinalLeaderBoard({super.key, required this.playersList});
 
   @override
   Widget build(BuildContext context) {
@@ -17,16 +18,16 @@ class FinalLeaderBoard extends StatelessWidget {
               itemBuilder: ((context, index) {
                 return ListTile(
                   title: Text(
-                    players_list[index]['nick_name'],
+                    playersList[index].nickName,
                     style: const TextStyle(fontSize: 24),
                   ),
                   trailing: Text(
-                    players_list[index]['points'].toString(),
+                    playersList[index].points.toString(),
                     style: const TextStyle(fontSize: 24),
                   ),
                 );
               }),
-              itemCount: players_list.length,
+              itemCount: playersList.length,
             ),
             TextButton(
                 onPressed: () {

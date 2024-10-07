@@ -36,7 +36,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
     final paintScreenVM = ref.read(paintScreenVMprovider);
     paintScreenVM.firstBuild = true;
     paintScreenVM.timer.cancel();
-    paintScreenVM.roomData.updateDataOfRoom(null);
+    paintScreenVM.roomDataWrap.updateDataOfRoom(null);
     paintScreenVM.leave();
     ref.read(paintScreenVMprovider).dispose();
     super.dispose();
@@ -44,11 +44,11 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
 
   void onFirstBuild(PaintScreenVM paintScreenVM) {
     //can_join means true means someone is still left to join
-    if (paintScreenVM.roomData.dataOfRoom?['can_join'] == true) {
+    if (paintScreenVM.roomDataWrap.roomData!.canJoin == true) {
       return;
     }
     paintScreenVM
-        .renderHiddenTextWidget(paintScreenVM.roomData.dataOfRoom?['word']);
+        .renderHiddenTextWidget(paintScreenVM.roomDataWrap.roomData!.word);
     paintScreenVM.startTimer();
     paintScreenVM.firstBuild = false;
   }
@@ -69,15 +69,15 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
       drawer: _buildDrawer(paintScreenVM),
       floatingActionButton: _timerFloatingActionButton(paintScreenVM),
       key: paintScreenVM.scaffoldKey,
-      body: paintScreenVM.roomData.dataOfRoom != null
-          ? paintScreenVM.roomData.dataOfRoom!['can_join'] != true
+      body: paintScreenVM.roomDataWrap.roomData != null
+          ? paintScreenVM.roomDataWrap.roomData!.canJoin != true
               ? _buildGame(paintScreenVM)
               : WaitingScreen(
-                  room_name: paintScreenVM.roomData.dataOfRoom?['room_name'],
-                  current_room_size:
-                      paintScreenVM.roomData.dataOfRoom?['players'].length,
-                  room_size: paintScreenVM.roomData.dataOfRoom?['room_size'],
-                  players_list: paintScreenVM.roomData.dataOfRoom?['players'],
+                  roomName: paintScreenVM.roomDataWrap.roomData!.roomName,
+                  currentRoomSize:
+                      paintScreenVM.roomDataWrap.roomData!.players.length,
+                  roomSize: paintScreenVM.roomDataWrap.roomData!.roomSize,
+                  playersList: paintScreenVM.roomDataWrap.roomData!.players,
                 )
           : const Center(
               child: CircularProgressIndicator(),
@@ -111,16 +111,16 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
         } else {
           print('databystream : ${snapshot.data ?? ' still waiting'}');
           return FinalLeaderBoard(
-              players_list: paintScreenVM.roomData.dataOfRoom?['players']);
+              playersList: paintScreenVM.roomDataWrap.roomData!.players);
         }
       },
     );
   }
 
   Widget _buildDrawer(PaintScreenVM paintScreenVM) {
-    return paintScreenVM.roomData.dataOfRoom != null
+    return paintScreenVM.roomDataWrap.roomData != null
         ? SideDrawer(
-            players_list: paintScreenVM.roomData.dataOfRoom?['players'],
+            playersList: paintScreenVM.roomDataWrap.roomData!.players,
           )
         : Container();
   }
@@ -165,7 +165,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
         'drawing_width': canvasWidth.toDouble(),
         'drawing_height': canvasHeight.toDouble(),
       },
-      'room_name': paintScreenVM.roomData.dataOfRoom?['room_name'],
+      'room_name': paintScreenVM.roomDataWrap.roomData!.roomName,
     });
   }
 
@@ -181,7 +181,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
           paintScreenVM.canvasHeight = constraints.maxHeight;
           return GestureDetector(
             onPanUpdate: (details) {
-              if (paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] ==
+              if (paintScreenVM.roomDataWrap.roomData!.turn.nickName ==
                   paintScreenVM.nickName) {
                 _emitPoints(
                     paintScreenVM,
@@ -192,7 +192,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
               }
             },
             onPanStart: (details) {
-              if (paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] ==
+              if (paintScreenVM.roomDataWrap.roomData!.turn.nickName ==
                   paintScreenVM.nickName) {
                 _emitPoints(
                     paintScreenVM,
@@ -203,11 +203,11 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
               }
             },
             onPanEnd: (details) {
-              if (paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] ==
+              if (paintScreenVM.roomDataWrap.roomData!.turn.nickName ==
                   paintScreenVM.nickName) {
                 paintScreenVM.socketRepository.socket?.emit('paint', {
                   'details': null,
-                  'room_name': paintScreenVM.roomData.dataOfRoom?['room_name'],
+                  'room_name': paintScreenVM.roomDataWrap.roomData!.roomName,
                 });
               }
             },
@@ -244,7 +244,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
                       colorString.split('(0x')[1].split(')')[0];
                   Map map = {
                     'color': valueString,
-                    'room_name': paintScreenVM.roomData.dataOfRoom?['room_name']
+                    'room_name': paintScreenVM.roomDataWrap.roomData!.roomName
                   };
                   paintScreenVM.socketRepository.socket
                       ?.emit('color_change', map);
@@ -266,7 +266,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
   Widget _buildSlider(PaintScreenVM paintScreenVM) {
     return Column(
       children: [
-        paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] ==
+        paintScreenVM.roomDataWrap.roomData!.turn.nickName ==
                 paintScreenVM.nickName
             ? Row(
                 children: [
@@ -290,7 +290,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
                         Map map = {
                           'value': value,
                           'room_name':
-                              paintScreenVM.roomData.dataOfRoom?['room_name'],
+                              paintScreenVM.roomDataWrap.roomData!.roomName,
                         };
                         paintScreenVM.socketRepository.socket
                             ?.emit('stroke_width', map);
@@ -300,7 +300,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
                   IconButton(
                     onPressed: () {
                       paintScreenVM.socketRepository.socket?.emit('erase_all',
-                          paintScreenVM.roomData.dataOfRoom?['room_name']);
+                          paintScreenVM.roomDataWrap.roomData!.roomName);
                     },
                     icon: const Icon(Icons.clear_all),
                   )
@@ -308,12 +308,12 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
               )
             : Center(
                 child: Text(
-                  "${paintScreenVM.roomData.dataOfRoom?["turn"]["nick_name"]} is drawing..",
+                  "${paintScreenVM.roomDataWrap.roomData!.turn.nickName} is drawing..",
                   style: const TextStyle(
                       fontSize: 17, fontWeight: FontWeight.bold),
                 ),
               ),
-        paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] !=
+        paintScreenVM.roomDataWrap.roomData!.turn.nickName !=
                 paintScreenVM.nickName
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -321,7 +321,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
               )
             : Center(
                 child: Text(
-                  paintScreenVM.roomData.dataOfRoom?['word'],
+                  paintScreenVM.roomDataWrap.roomData!.word,
                   style: const TextStyle(fontSize: 16),
                 ),
               ),
@@ -371,7 +371,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
   }
 
   Widget _buildInputArea(PaintScreenVM paintScreenVM) {
-    return paintScreenVM.roomData.dataOfRoom?['turn']['nick_name'] !=
+    return paintScreenVM.roomDataWrap.roomData!.turn.nickName !=
             paintScreenVM.nickName
         ? Padding(
             padding: const EdgeInsets.all(16.0),
@@ -386,9 +386,9 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
                         Map msgMap = {
                           'sender_name': paintScreenVM.nickName,
                           'message': value.trim(),
-                          'word': paintScreenVM.roomData.dataOfRoom?["word"],
+                          'word': paintScreenVM.roomDataWrap.roomData!.word,
                           'room_name':
-                              paintScreenVM.roomData.dataOfRoom?["room_name"],
+                              paintScreenVM.roomDataWrap.roomData!.roomName,
                           'guessedUserCounter':
                               paintScreenVM.guessedUserCounter,
                           'total_time': 60,
@@ -426,9 +426,9 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
                         Map msgMap = {
                           'sender_name': paintScreenVM.nickName,
                           'message': value.trim(),
-                          'word': paintScreenVM.roomData.dataOfRoom?["word"],
+                          'word': paintScreenVM.roomDataWrap.roomData!.word,
                           'room_name':
-                              paintScreenVM.roomData.dataOfRoom?["room_name"],
+                              paintScreenVM.roomDataWrap.roomData!.roomName,
                           'guessedUserCounter':
                               paintScreenVM.guessedUserCounter,
                           'total_time': 60,

@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:socket_io_client/socket_io_client.dart';
+import 'package:yayscribbl/models/player_model.dart';
+import 'package:yayscribbl/models/room_model.dart';
 import 'package:yayscribbl/repository/socket_client.dart';
 
 class SocketRepository {
@@ -18,7 +21,11 @@ class SocketRepository {
     socket?.off('update_room');
     socket?.on('update_room', (roomAndPlayer) {
       print(roomAndPlayer);
-      fun(roomAndPlayer);
+      RoomModel roomData =
+          RoomModel.fromJson(jsonEncode(jsonDecode(roomAndPlayer)['roomData']));
+      PlayerModel player = PlayerModel.fromJson(
+          jsonEncode(jsonDecode(roomAndPlayer)['thisPlayer']));
+      fun(roomData, player);
     });
   }
 
@@ -62,7 +69,8 @@ class SocketRepository {
   void changeTurnListener(Function fun) {
     socket?.off('change_turn');
     socket?.on('change_turn', (data) {
-      fun(data);
+      RoomModel roomData = RoomModel.fromMap(data);
+      fun(roomData);
     });
   }
 
@@ -76,28 +84,33 @@ class SocketRepository {
   void updateScoreListener(Function fun) {
     socket?.off('update_score');
     socket?.on('update_score', (data) {
-      fun(data);
+      RoomModel roomData = RoomModel.fromMap(data);
+      fun(roomData);
     });
   }
 
   void showLeaderBoardListener(Function fun) {
     socket?.off('show_leader_board');
     socket?.on('show_leader_board', (data) {
-      fun(data);
+      RoomModel roomData = RoomModel.fromMap(data);
+      fun(roomData);
     });
   }
 
   void userDisconnectedListener(Function fun) {
     socket?.off('user_disconnected');
     socket?.on('user_disconnected', (roomAndWhoDisconnected) {
-      fun(roomAndWhoDisconnected['dataOfRoom'],
-          roomAndWhoDisconnected['playerWhoDisconnected']);
+      RoomModel roomData =
+          RoomModel.fromMap(roomAndWhoDisconnected['roomData']);
+      PlayerModel player =
+          PlayerModel.fromMap(roomAndWhoDisconnected['playerWhoDisconnected']);
+      fun(roomData, player);
     });
   }
 
   void notCorrectGameListener(Function fun) {
     socket?.on('notCorrectGame', (err) {
-      fun(err.toString());
+      fun(err);
     });
   }
 
@@ -106,6 +119,6 @@ class SocketRepository {
   }
 
   void onConnectErrorListener() {
-    socket?.onConnectError((data) => print(data.toString()));
+    socket?.onConnectError((data) => print(data));
   }
 }

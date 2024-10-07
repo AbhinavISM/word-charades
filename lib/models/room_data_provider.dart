@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:yayscribbl/models/room_model.dart';
 
-class RoomData extends ChangeNotifier {
-  Map? dataOfRoom;
-  void updateDataOfRoom(Map? data) {
-    dataOfRoom = data;
+class RoomDataWrap extends ChangeNotifier {
+  RoomModel? roomData;
+  void updateDataOfRoom(RoomModel? data) {
+    roomData = data;
     notifyListeners();
   }
 }

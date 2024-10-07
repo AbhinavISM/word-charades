@@ -39,8 +39,8 @@ final joinRoomVMprovider = Provider.autoDispose<JoinRoomVM>((ref) {
       ref.read(scaffoldMessengerKeyProvider));
 });
 
-final roomDataProvider = Provider<RoomData>((ref) {
-  return RoomData();
+final roomDataProvider = Provider<RoomDataWrap>((ref) {
+  return RoomDataWrap();
 });
 
 final paintScreenVMprovider =

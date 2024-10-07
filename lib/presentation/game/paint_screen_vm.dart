@@ -4,18 +4,20 @@ import 'dart:math';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:yayscribbl/models/player_model.dart';
 import 'package:yayscribbl/models/room_data_provider.dart';
+import 'package:yayscribbl/models/room_model.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
 
 const String appId = "241714311a2a48569fd152d4411e5a9b";
 
 class PaintScreenVM extends ChangeNotifier {
-  final RoomData roomData;
+  final RoomDataWrap roomDataWrap;
   final SocketRepository socketRepository;
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
 
   PaintScreenVM(
-      this.roomData, this.socketRepository, this.scaffoldMessengerKey) {
+      this.roomDataWrap, this.socketRepository, this.scaffoldMessengerKey) {
     connect();
   }
   double? canvasWidth;
@@ -65,9 +67,9 @@ class PaintScreenVM extends ChangeNotifier {
     socketRepository.onConnectErrorListener();
   }
 
-  void userDisonnectedEx(Map dataOfRoom, Map disconnectedUser) {
-    roomData.updateDataOfRoom(dataOfRoom);
-    final disconnectedNickName = disconnectedUser['nick_name'];
+  void userDisonnectedEx(RoomModel roomData, PlayerModel disconnectedUser) {
+    roomDataWrap.updateDataOfRoom(roomData);
+    final disconnectedNickName = disconnectedUser.nickName;
     scaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(content: Text('{$disconnectedNickName} disconnected')));
   }
@@ -104,7 +106,7 @@ class PaintScreenVM extends ChangeNotifier {
     );
 
     await agoraEngine.joinChannel(
-      channelId: roomData.dataOfRoom?['room_name'],
+      channelId: roomDataWrap.roomData!.roomName,
       options: options,
       uid: uid,
       token: token,
@@ -117,10 +119,9 @@ class PaintScreenVM extends ChangeNotifier {
 
   void startTimer() {
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (timeLeft == 0 &&
-          roomData.dataOfRoom?['turn']['nick_name'] == nickName) {
+      if (timeLeft == 0 && roomDataWrap.roomData!.turn.nickName == nickName) {
         socketRepository.socket
-            ?.emit('change_turn', roomData.dataOfRoom?['room_name']);
+            ?.emit('change_turn', roomDataWrap.roomData!.roomName);
         timer.cancel();
       } else {
         timeLeft--;
@@ -140,10 +141,10 @@ class PaintScreenVM extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateRoomEx(Map roomAndPlayer) {
-    roomData.updateDataOfRoom(roomAndPlayer['dataOfRoom']);
-    renderHiddenTextWidget(roomAndPlayer['dataOfRoom']['word']);
-    if (roomAndPlayer['dataOfRoom']['can_join'] != true) {
+  void updateRoomEx(RoomModel roomData, PlayerModel player) {
+    roomDataWrap.updateDataOfRoom(roomData);
+    renderHiddenTextWidget(roomData.word);
+    if (roomData.canJoin != true) {
       startTimer();
     }
     notifyListeners();
@@ -277,10 +278,10 @@ class PaintScreenVM extends ChangeNotifier {
   void msgEx(Map data) {
     messages.add(data);
     guessedUserCounter = data['guessedUserCounter'];
-    if (roomData.dataOfRoom?['turn']['nick_name'] == nickName) {
-      if (guessedUserCounter == (roomData.dataOfRoom?['players'].length - 1)) {
+    if (roomDataWrap.roomData!.turn.nickName == nickName) {
+      if (guessedUserCounter == (roomDataWrap.roomData!.players.length - 1)) {
         socketRepository.socket
-            ?.emit('change_turn', roomData.dataOfRoom?['room_name']);
+            ?.emit('change_turn', roomDataWrap.roomData!.roomName);
       }
     }
     scrollController.animateTo(
@@ -291,11 +292,11 @@ class PaintScreenVM extends ChangeNotifier {
     notifyListeners();
   }
 
-  void changeTurnEx(Map data) {
+  void changeTurnEx(RoomModel roomData) {
     print('client change turn called');
-    print(data.toString());
-    roomData.updateDataOfRoom(data);
-    renderHiddenTextWidget(roomData.dataOfRoom?['word']);
+    print(roomData.toString());
+    roomDataWrap.updateDataOfRoom(roomData);
+    renderHiddenTextWidget(roomDataWrap.roomData!.word);
     guessedUserCounter = 0;
     timeLeft = 60;
     paths.clear();
@@ -309,22 +310,22 @@ class PaintScreenVM extends ChangeNotifier {
 
   void closeInputEx() {
     socketRepository.socket
-        ?.emit('update_score', roomData.dataOfRoom?['room_name']);
+        ?.emit('update_score', roomDataWrap.roomData!.roomName);
     alreadyGuessedByMe = true;
     notifyListeners();
   }
 
-  void updateScoreEx(Map data) {
-    roomData.updateDataOfRoom(data);
+  void updateScoreEx(RoomModel roomData) {
+    roomDataWrap.updateDataOfRoom(roomData);
     notifyListeners();
   }
 
-  void showLeaderBoardEx(Map data) {
+  void showLeaderBoardEx(RoomModel roomData) {
     print('told to show leader board');
-    for (int i = 0; i < data['players'].length; i++) {
-      if (winnerPoints < data['players'][i]['points']) {
-        winner = data['players'][i]['nick_name'];
-        winnerPoints = data['players'][i]['points'];
+    for (int i = 0; i < roomData.players.length; i++) {
+      if (winnerPoints < roomData.players[i].points) {
+        winner = roomData.players[i].nickName;
+        winnerPoints = roomData.players[i].points;
       }
     }
     timer.cancel();
@@ -332,6 +333,6 @@ class PaintScreenVM extends ChangeNotifier {
     // print('wether to show : ${showFinalLeaderboard}');
     timeLeft = 0;
     notifyListeners();
-    roomData.updateDataOfRoom(data);
+    roomDataWrap.updateDataOfRoom(roomData);
   }
 }
