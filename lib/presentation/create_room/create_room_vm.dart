@@ -61,8 +61,8 @@ class CreateRoomVM extends ChangeNotifier {
     // print(Provider.of<RoomData>(context).dataOfRoom.toString());
     // Navigator.of(context).pushNamed('/paint_screen',
     //     arguments: createRoomVM.nameController.text);
-    navigatorKey.currentState
-        ?.pushNamed('/paint_screen', arguments: roomAndPlayer['thisPlayer']);
+    navigatorKey.currentState?.pushNamed('/paint_screen',
+        arguments: roomAndPlayer['thisPlayer']['nick_name']);
   }
 
   void notCorrectGameEx(String errMessage) {
