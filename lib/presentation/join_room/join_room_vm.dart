@@ -37,15 +37,15 @@ class JoinRoomVM extends ChangeNotifier {
     }
   }
 
-  void updateRoomUI(Map dataOfRoom) {
+  void updateRoomUI(Map roomAndPlayer) {
     // joinRoomVM.showProgressBar = false;
     showProgressBarController.sink.add(false);
-    roomData.updateDataOfRoom(dataOfRoom);
+    roomData.updateDataOfRoom(roomAndPlayer['dataOfRoom']);
     // print(Provider.of<RoomData>(context).dataOfRoom.toString());
     // Navigator.of(context)
     //     .pushNamed('/paint_screen', arguments: joinRoomVM.nameController.text);
-    navigatorKey.currentState
-        ?.pushNamed('/paint_screen', arguments: nameController.text);
+    navigatorKey.currentState?.pushNamed('/paint_screen',
+        arguments: roomAndPlayer['thisPlayer']['nick_name']);
   }
 
   void notCorrectGameEx(String errMessage) {
