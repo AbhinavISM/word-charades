@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:ui';
 
 import 'package:socket_io_client/socket_io_client.dart';
@@ -21,10 +20,8 @@ class SocketRepository {
     socket?.off('update_room');
     socket?.on('update_room', (roomAndPlayer) {
       print(roomAndPlayer);
-      RoomModel roomData =
-          RoomModel.fromJson(jsonEncode(jsonDecode(roomAndPlayer)['roomData']));
-      PlayerModel player = PlayerModel.fromJson(
-          jsonEncode(jsonDecode(roomAndPlayer)['thisPlayer']));
+      RoomModel roomData = RoomModel.fromMap(roomAndPlayer['roomData']);
+      PlayerModel player = PlayerModel.fromMap(roomAndPlayer['thisPlayer']);
       fun(roomData, player);
     });
   }

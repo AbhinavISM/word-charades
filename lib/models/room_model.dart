@@ -69,8 +69,8 @@ class RoomModel {
     return RoomModel(
       word: map['word'] as String,
       roomName: map['room_name'] as String,
-      roomSize: int.parse(map['room_size']),
-      maxRounds: int.parse(map['max_rounds']),
+      roomSize: map['room_size'] as int,
+      maxRounds: map['max_rounds'] as int,
       currentRound: map['current_round'] as int,
       players: List<PlayerModel>.from(
         (map['players'] as List<dynamic>).map<PlayerModel>(

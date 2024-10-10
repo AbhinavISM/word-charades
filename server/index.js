@@ -121,10 +121,10 @@ io.on('connection', (socket) => {
             socketToRoomNameMap[socket.id] = room_name;
             let players = [];
             players.push(player);
-            let room = new RoomClass(word, room_name, room_size, max_rounds, 1, players, true, player, 0);
+            let room = new RoomClass(word, room_name, parseInt(room_size), parseInt(max_rounds), 1, players, true, player, 0);
             roomsMap.set(room_name, room);
             socket.join(room_name);
-            io.to(room_name).emit('update_room', JSON.stringify({roomData : room , thisPlayer : player}));
+            io.to(room_name).emit('update_room', {roomData : room , thisPlayer : player});
         } catch (err) {
             console.log(err);
         }
@@ -152,7 +152,7 @@ io.on('connection', (socket) => {
                     room.can_join = false;
                 }
                 roomsMap.set(room_name, room);
-                io.to(room_name).emit('update_room', JSON.stringify({roomData : room , thisPlayer : player}));
+                io.to(room_name).emit('update_room', {roomData : room , thisPlayer : player});
             }else{
                 socket.emit('notCorrectGame', 'this game is in progress, please try later');
             }
