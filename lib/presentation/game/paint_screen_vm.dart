@@ -5,6 +5,7 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:yayscribbl/models/player_model.dart';
+import 'package:yayscribbl/models/point_model.dart';
 import 'package:yayscribbl/models/room_data_provider.dart';
 import 'package:yayscribbl/models/room_model.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
@@ -26,7 +27,7 @@ class PaintScreenVM extends ChangeNotifier {
   late String nickName;
   List<Path> paths = [];
   List<Paint> pathPaints = [];
-  List<List<Map>> pathPoints = [];
+  List<List<PointModel>> pathPoints = [];
   StrokeCap strokeType = StrokeCap.round;
   Color selectedColor = Colors.black;
   double opacity = 1;
@@ -162,16 +163,14 @@ class PaintScreenVM extends ChangeNotifier {
 
   void resizeDrawing() {
     paths = [];
-    for (List<Map> points in pathPoints) {
+    for (List<PointModel> points in pathPoints) {
       paths.add(Path());
       for (int i = 0; i < points.length; i++) {
-        Map point = points[i];
-        double dx = (point['details']['dx'] as num).toDouble();
-        double dy = (point['details']['dy'] as num).toDouble();
-        double drawingUserScreenWidth =
-            (point['details']['drawing_width'] as num).toDouble();
-        double drawingUserScreenHeight =
-            (point['details']['drawing_height'] as num).toDouble();
+        PointModel point = points[i];
+        double dx = point.dx;
+        double dy = point.dy;
+        double drawingUserScreenWidth = point.sourceDrawingWidth;
+        double drawingUserScreenHeight = point.sourceDrawingHeight;
 
         double widthRatio = canvasWidth! / drawingUserScreenWidth;
         double heightRatio = canvasHeight! / drawingUserScreenHeight;
@@ -197,14 +196,12 @@ class PaintScreenVM extends ChangeNotifier {
     notifyListeners();
   }
 
-  void pointsToDrawEx(Map point) {
-    if (point['details'] != null) {
-      double dx = (point['details']['dx'] as num).toDouble();
-      double dy = (point['details']['dy'] as num).toDouble();
-      double drawingUserScreenWidth =
-          (point['details']['drawing_width'] as num).toDouble();
-      double drawingUserScreenHeight =
-          (point['details']['drawing_height'] as num).toDouble();
+  void pointsToDrawEx(PointModel? point) {
+    if (point != null) {
+      double dx = point.dx;
+      double dy = point.dy;
+      double drawingUserScreenWidth = point.sourceDrawingWidth;
+      double drawingUserScreenHeight = point.sourceDrawingHeight;
 
       double widthRatio = canvasWidth! / drawingUserScreenWidth;
       double heightRatio = canvasHeight! / drawingUserScreenHeight;

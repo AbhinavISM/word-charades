@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yayscribbl/main.dart';
+import 'package:yayscribbl/models/point_model.dart';
 import 'package:yayscribbl/presentation/finish_game/final_leader_board.dart';
 import 'package:yayscribbl/presentation/game/my_clipper.dart';
 import 'package:yayscribbl/presentation/game/my_custom_painter.dart';
@@ -158,16 +159,16 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
   void _emitPoints(PaintScreenVM paintScreenVM, double dx, double dy,
       double canvasWidth, double canvasHeight) {
     print('normalizedx : $dx , normalizedY : $dy\n');
-    Map point = {
-      'details': {
-        'dx': dx.toDouble(),
-        'dy': dy.toDouble(),
-        'drawing_width': canvasWidth.toDouble(),
-        'drawing_height': canvasHeight.toDouble(),
-      },
+    PointModel point = PointModel(
+      dx: dx.toDouble(),
+      dy: dy.toDouble(),
+      sourceDrawingWidth: canvasWidth.toDouble(),
+      sourceDrawingHeight: canvasHeight.toDouble(),
+    );
+    paintScreenVM.socketRepository.socket?.emit('paint', {
+      'details': point.toJson(),
       'room_name': paintScreenVM.roomDataWrap.roomData!.roomName,
-    };
-    paintScreenVM.socketRepository.socket?.emit('paint', point);
+    });
     paintScreenVM.pointsToDrawEx(point);
   }
 
@@ -207,12 +208,11 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
             onPanEnd: (details) {
               if (paintScreenVM.roomDataWrap.roomData!.turn.nickName ==
                   paintScreenVM.nickName) {
-                Map point = {
+                paintScreenVM.socketRepository.socket?.emit('paint', {
                   'details': null,
                   'room_name': paintScreenVM.roomDataWrap.roomData!.roomName,
-                };
-                paintScreenVM.socketRepository.socket?.emit('paint', point);
-                paintScreenVM.pointsToDrawEx(point);
+                });
+                paintScreenVM.pointsToDrawEx(null);
               }
             },
             child: RepaintBoundary(

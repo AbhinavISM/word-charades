@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:socket_io_client/socket_io_client.dart';
 import 'package:yayscribbl/models/player_model.dart';
+import 'package:yayscribbl/models/point_model.dart';
 import 'package:yayscribbl/models/room_model.dart';
 import 'package:yayscribbl/repository/socket_client.dart';
 
@@ -29,7 +30,7 @@ class SocketRepository {
   void pointsToDrawListener(Function fun) {
     socket?.off('points_to_draw');
     socket?.on('points_to_draw', (point) {
-      fun(point);
+      fun(PointModel.fromMap(point));
     });
   }
 
