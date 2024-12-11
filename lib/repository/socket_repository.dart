@@ -30,7 +30,11 @@ class SocketRepository {
   void pointsToDrawListener(Function fun) {
     socket?.off('points_to_draw');
     socket?.on('points_to_draw', (point) {
-      fun(PointModel.fromMap(point));
+      if (point != null) {
+        fun(PointModel.fromJson(point));
+      } else {
+        fun(null);
+      }
     });
   }
 

@@ -163,7 +163,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('paint', ({details, room_name}) => {
-        socket.broadcast.to(room_name).emit('points_to_draw', {details: details});
+        socket.broadcast.to(room_name).emit('points_to_draw', details);
     });
 
     socket.on('color_change', ({color, room_name}) => {
