@@ -20,6 +20,7 @@ class PaintScreenVM extends ChangeNotifier {
   PaintScreenVM(
       this.roomDataWrap, this.socketRepository, this.scaffoldMessengerKey) {
     connect();
+    setupDrawingHandler();
   }
   double? canvasWidth;
   double? canvasHeight;
@@ -140,6 +141,76 @@ class PaintScreenVM extends ChangeNotifier {
       ));
     }
     notifyListeners();
+  }
+
+  final StreamController<PointModel?> _pointController =
+      StreamController<PointModel?>();
+  Timer? _batchTimer;
+  List<PointModel?> _pointBuffer = [];
+  List<PointModel?> _processingBuffer = [];
+  bool _isProcessing = false;
+
+  void _processPoints() {
+    if (_pointBuffer.isEmpty || _isProcessing) return;
+
+    try {
+      _isProcessing = true;
+
+      _processingBuffer = _pointBuffer;
+      _pointBuffer = [];
+
+      socketRepository.socket?.emit('paint', {
+        'details': _processingBuffer.map((p) => p?.toJson()).toList(),
+        'room_name': roomDataWrap.roomData!.roomName,
+      });
+
+      _processingBuffer.clear();
+    } catch (e) {
+      print('Error preparing points for sending: $e');
+      // Recover points if preparation failed
+      _pointBuffer.insertAll(0, _processingBuffer);
+    } finally {
+      _isProcessing = false;
+      // If there are new points that arrived during processing,
+      // start a new batch timer
+      if (_pointBuffer.isNotEmpty) {
+        _startBatchTimer();
+      }
+    }
+  }
+
+  void _startBatchTimer() {
+    // Only start a new timer if one isn't already running
+    if (_batchTimer == null || !_batchTimer!.isActive) {
+      _batchTimer = Timer(const Duration(milliseconds: 16), () {
+        _processPoints();
+      });
+    }
+  }
+
+  void setupDrawingHandler() {
+    _pointController.stream.listen((PointModel? point) {
+      _pointBuffer.add(point);
+      _startBatchTimer();
+    }, onError: (error) {
+      print('Error in point stream: $error');
+    });
+  }
+
+  void sendPoints(PointModel? point) {
+    _pointController.add(point);
+    pointsToDrawEx(point);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _batchTimer?.cancel();
+    // Process remaining points one last time
+    if (_pointBuffer.isNotEmpty) {
+      _processPoints();
+    }
+    _pointController.close();
   }
 
   void updateRoomEx(RoomModel roomData, PlayerModel player) {
