@@ -23,6 +23,12 @@ app.get('/', (req, res) => {
     res.status(200).send('OK');
 });
 
+mongoose.connect(db).then(() => {
+    console.log('connection succesful to mongo db');
+}).catch((e) => {
+    console.log(e);
+});
+
 //socket.emit() -> send to sender only
 //io.emit() -> send to everyone
 //socket.broadcast.emit() -> send to everyone except sender
