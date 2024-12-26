@@ -9,18 +9,15 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('server started and running at port ' + PORT);
 });
 
-// Initialize Socket.IO after server creation
-// const io = require("socket.io")(server, {
-//     // Add CORS configuration for Cloud Run
-//     cors: {
-//         origin: "*",
-//         methods: ["GET", "POST"]
-//     }
-// });
+const io = require("socket.io")(server, {
+    // Add CORS configuration for Cloud Run
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 
 const mongoose = require("mongoose");
-const io = require("socket.io")(server)
-
 const db = 'mongodb+srv://Abhinavkism:TMecPvft6v9rf9B8@cluster0.akleghw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 const getWord = require('./api/getWord');
 const bcrypt = require("bcrypt");
