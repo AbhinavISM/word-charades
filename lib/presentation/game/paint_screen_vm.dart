@@ -20,7 +20,6 @@ class PaintScreenVM extends ChangeNotifier {
   PaintScreenVM(
       this.roomDataWrap, this.socketRepository, this.scaffoldMessengerKey) {
     connect();
-    setupDrawingHandler();
   }
   double? canvasWidth;
   double? canvasHeight;
@@ -143,8 +142,6 @@ class PaintScreenVM extends ChangeNotifier {
     notifyListeners();
   }
 
-  final StreamController<PointModel?> _pointController =
-      StreamController<PointModel?>();
   Timer? _batchTimer;
   List<PointModel?> _pointBuffer = [];
   List<PointModel?> _processingBuffer = [];
@@ -188,17 +185,9 @@ class PaintScreenVM extends ChangeNotifier {
     }
   }
 
-  void setupDrawingHandler() {
-    _pointController.stream.listen((PointModel? point) {
-      _pointBuffer.add(point);
-      _startBatchTimer();
-    }, onError: (error) {
-      print('Error in point stream: $error');
-    });
-  }
-
   void sendPoints(PointModel? point) {
-    _pointController.add(point);
+    _pointBuffer.add(point);
+    _startBatchTimer();
     pointsToDrawEx(point);
   }
 
@@ -210,7 +199,6 @@ class PaintScreenVM extends ChangeNotifier {
     if (_pointBuffer.isNotEmpty) {
       _processPoints();
     }
-    _pointController.close();
   }
 
   void updateRoomEx(RoomModel roomData, PlayerModel player) {
