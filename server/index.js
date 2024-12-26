@@ -1,22 +1,22 @@
 const express = require("express");
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 
-function convertStringToDate(dateTimeString) {
-    var [datePart, timePart] = dateTimeString.split(' '); // Split the date and time parts
-    var [hhmmss, ms] = timePart.split('.');
-    // var [year, month, day] = datePart.split('-').map(Number); // Split the date part into year, month, and day
-    // var [hours, minutes, seconds] = timePart.split(':').map(Number); // Split the time part into hours, minutes, and seconds
-  
-    // Create a new Date object using the extracted values
-    var dateObject = new Date(datePart+"T"+hhmmss+"+05:30");
-  
-    return dateObject;
-}
+app.use(express.json());
 
+// Create the server after express initialization
 const server = app.listen(PORT, '0.0.0.0', () => {
     console.log('server started and running at port ' + PORT);
 });
+
+// Initialize Socket.IO after server creation
+// const io = require("socket.io")(server, {
+//     // Add CORS configuration for Cloud Run
+//     cors: {
+//         origin: "*",
+//         methods: ["GET", "POST"]
+//     }
+// });
 
 const mongoose = require("mongoose");
 const io = require("socket.io")(server)
@@ -27,7 +27,10 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("./models/User");
 
-app.use(express.json());
+// Add basic health check endpoint
+app.get('/', (req, res) => {
+    res.status(200).send('OK');
+});
 
 //socket.emit() -> send to sender only
 //io.emit() -> send to everyone
