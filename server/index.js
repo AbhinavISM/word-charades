@@ -29,12 +29,6 @@ const User = require("./models/User");
 
 app.use(express.json());
 
-mongoose.connect(db).then(() => {
-    console.log('connection succesful to mongo db');
-}).catch((e) => {
-    console.log(e);
-});
-
 //socket.emit() -> send to sender only
 //io.emit() -> send to everyone
 //socket.broadcast.emit() -> send to everyone except sender
@@ -67,46 +61,6 @@ class PlayerClass {
         this.points = points;
     }
 }
-
-app.post("/signup", async (req, res) => {
-    const {username, email, password} = req.body;
-    try{
-        const existing_user = await User.findOne({email : email});
-        if(existing_user){
-            return res.status(400).json({message : "User already exists"});
-        }
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const result = User.create({
-            name : username,
-            email : email,
-            password : hashedPassword,
-        });
-        const token = jwt.sign({email : result.email, id : result._id}, "wordcharades");
-        res.status(201).json({user : result, token : token});
-    } catch (e) {
-        console.log(e);
-        res.status(500).json({message : "Something went wrong"});
-    }
-});
-
-app.get("/signin",  async (req, res) => {
-    const {email, password} = req.body;
-    try {
-        const existingUser = await User.findOne({email : email});
-        if(!existingUser){
-            res.status(400).json({message : "User does not exist"});
-        }
-        const matchPassword = await bcrypt.compare(password, existingUser.password);
-        if(!matchPassword){
-            return res.status(400).json({message : "invalid credentials"});
-        }
-        const token = jwt.sign({email : existingUser.email, id : existingUser._id}, "wordcharades");
-        res.status(201).json({user : existingUser, token : token});
-    } catch (e) {
-        console.log(e);
-        res.status(500).json({message : "Something went wrong"});
-    }
-});
 
 io.on('connection', (socket) => {
     console.log("a user connected", socket.id);
