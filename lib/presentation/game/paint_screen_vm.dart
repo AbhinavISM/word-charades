@@ -232,31 +232,36 @@ class PaintScreenVM extends ChangeNotifier {
       ..strokeJoin = StrokeJoin.bevel;
   }
 
+  (double, double) normalizeCoordinates(PointModel point) {
+    double dx = point.dx;
+    double dy = point.dy;
+    double drawingUserScreenWidth = point.sourceDrawingWidth;
+    double drawingUserScreenHeight = point.sourceDrawingHeight;
+
+    double widthRatio = canvasWidth! / drawingUserScreenWidth;
+    double heightRatio = canvasHeight! / drawingUserScreenHeight;
+    double scaleFactor = min(widthRatio, heightRatio);
+
+    double scaledX = dx * scaleFactor;
+    double scaledY = dy * scaleFactor;
+
+    double xOffset = (canvasWidth! - drawingUserScreenWidth * scaleFactor) / 2;
+    double yOffset =
+        (canvasHeight! - drawingUserScreenHeight * scaleFactor) / 2;
+
+    double finalX = scaledX + xOffset;
+    double finalY = scaledY + yOffset;
+    return (finalX, finalY);
+  }
+
+  //do you remember how this worked??
   void resizeDrawing() {
     paths = [];
     for (List<PointModel> points in pathPoints) {
       paths.add(Path());
       for (int i = 0; i < points.length; i++) {
         PointModel point = points[i];
-        double dx = point.dx;
-        double dy = point.dy;
-        double drawingUserScreenWidth = point.sourceDrawingWidth;
-        double drawingUserScreenHeight = point.sourceDrawingHeight;
-
-        double widthRatio = canvasWidth! / drawingUserScreenWidth;
-        double heightRatio = canvasHeight! / drawingUserScreenHeight;
-        double scaleFactor = min(widthRatio, heightRatio);
-
-        double scaledX = dx * scaleFactor;
-        double scaledY = dy * scaleFactor;
-
-        double xOffset =
-            (canvasWidth! - drawingUserScreenWidth * scaleFactor) / 2;
-        double yOffset =
-            (canvasHeight! - drawingUserScreenHeight * scaleFactor) / 2;
-
-        double finalX = scaledX + xOffset;
-        double finalY = scaledY + yOffset;
+        final (finalX, finalY) = normalizeCoordinates(point);
         if (i == 0) {
           paths.last.moveTo(finalX, finalY);
         } else {
@@ -269,27 +274,7 @@ class PaintScreenVM extends ChangeNotifier {
 
   void pointsToDrawEx(PointModel? point) {
     if (point != null) {
-      double dx = point.dx;
-      double dy = point.dy;
-      double drawingUserScreenWidth = point.sourceDrawingWidth;
-      double drawingUserScreenHeight = point.sourceDrawingHeight;
-
-      double widthRatio = canvasWidth! / drawingUserScreenWidth;
-      double heightRatio = canvasHeight! / drawingUserScreenHeight;
-      double scaleFactor = min(widthRatio, heightRatio);
-
-      double scaledX = dx * scaleFactor;
-      double scaledY = dy * scaleFactor;
-
-      double xOffset =
-          (canvasWidth! - drawingUserScreenWidth * scaleFactor) / 2;
-      double yOffset =
-          (canvasHeight! - drawingUserScreenHeight * scaleFactor) / 2;
-
-      double finalX = scaledX + xOffset;
-      double finalY = scaledY + yOffset;
-
-      print('finalx : $finalX , finaly : $finalY\n');
+      final (finalX, finalY) = normalizeCoordinates(point);
       if (paths.isEmpty) {
         paths.add(Path());
         pathPaints.add(createPaint());
@@ -306,7 +291,6 @@ class PaintScreenVM extends ChangeNotifier {
       paths.add(Path());
       pathPaints.add(createPaint());
       pathPoints.add([]);
-      print('null point aaya');
     }
 
     notifyListeners();

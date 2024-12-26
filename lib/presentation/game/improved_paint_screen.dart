@@ -158,7 +158,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
 
   void _emitPoints(PaintScreenVM paintScreenVM, double? dx, double? dy,
       double canvasWidth, double canvasHeight) {
-    print('normalizedx : $dx , normalizedY : $dy\n');
+    print('emitdx : $dx , emitdy : $dy\n');
     PointModel? point;
     if (dx != null && dy != null) {
       point = PointModel(
