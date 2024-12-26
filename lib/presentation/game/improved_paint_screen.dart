@@ -177,7 +177,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
         builder: (BuildContext context, BoxConstraints constraints) {
           if (paintScreenVM.canvasWidth != constraints.maxWidth ||
               paintScreenVM.canvasHeight != constraints.maxHeight) {
-            paintScreenVM.resizeDrawing();
+            Future.delayed(Duration.zero, () => paintScreenVM.resizeDrawing());
           }
           paintScreenVM.canvasWidth = constraints.maxWidth;
           paintScreenVM.canvasHeight = constraints.maxHeight;
