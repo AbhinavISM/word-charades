@@ -38,10 +38,10 @@ class PointModel {
 
   factory PointModel.fromMap(Map<String, dynamic> map) {
     return PointModel(
-      dx: map['dx'] as double,
-      dy: map['dy'] as double,
-      sourceDrawingWidth: map['sourceDrawingWidth'] as double,
-      sourceDrawingHeight: map['sourceDrawingHeight'] as double,
+      dx: map['dx'].toDouble(),
+      dy: map['dy'].toDouble(),
+      sourceDrawingWidth: map['sourceDrawingWidth'].toDouble(),
+      sourceDrawingHeight: map['sourceDrawingHeight'].toDouble(),
     );
   }
 
