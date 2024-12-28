@@ -1,3 +1,5 @@
 runtime: nodejs20
 env: standard
 instance_class: F1
+network:
+  session_affinity: true
