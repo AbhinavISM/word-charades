@@ -2,3 +2,5 @@ steps:
 - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk' 
   entrypoint: 'gcloud'
   args: ['app', 'deploy', '--quiet']
+options:
+  default_logs_bucket_behavior: REGIONAL_USER_OWNED_BUCKET
