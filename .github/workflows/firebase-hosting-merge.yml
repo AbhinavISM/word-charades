@@ -17,3 +17,5 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ROSY_SUNSPOT_446209_U6 }}
           channelId: live
           projectId: rosy-sunspot-446209-u6
+        env:
+          FIREBASE_CLI_EXPERIMENTS: webframeworks
