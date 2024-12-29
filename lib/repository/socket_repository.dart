@@ -32,6 +32,7 @@ class SocketRepository {
     socket?.on('points_to_draw', (points) {
       for (var point in points) {
         if (point != null) {
+          print(point);
           fun(PointModel.fromJson(point));
         } else {
           fun(null);

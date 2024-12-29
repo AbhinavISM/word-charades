@@ -6,7 +6,7 @@ class SocketClient {
   //just a private constructor, no need to name it internal
   SocketClient._internal() {
     socket = IO.io(
-        'https://ddcf-2401-4900-710c-ea48-3dac-bb49-5bea-5f02.ngrok-free.app',
+        'https://word-charades-622981890202.us-central1.run.app',
         IO.OptionBuilder()
             .setTransports(['websocket'])
             .disableAutoConnect()
