@@ -1,129 +1,107 @@
-import 'dart:ui';
+import 'dart:async';
 
-import 'package:socket_io_client/socket_io_client.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:yayscribbl/models/player_model.dart';
 import 'package:yayscribbl/models/point_model.dart';
 import 'package:yayscribbl/models/room_model.dart';
-import 'package:yayscribbl/repository/socket_client.dart';
+import 'package:yayscribbl/models/round_model.dart';
+import 'package:yayscribbl/models/socket_events.dart';
 
 class SocketRepository {
-  final socket = SocketClient.instance.socket;
+  final IO.Socket socket;
 
-  void createGame(Map data) {
-    socket?.emit('create_game', data);
+  SocketRepository({required this.socket}) {
+    _initializeListeners();
   }
+  // The Single Source of Truth
+  final _eventController = StreamController<SocketEvent>.broadcast();
 
-  void joinGame(Map data) {
-    socket?.emit('join_game', data);
-  }
+  // Public getter
+  Stream<SocketEvent> get eventStream => _eventController.stream;
 
-  void updateRoomListener(Function fun) {
-    socket?.off('update_room');
-    socket?.on('update_room', (roomAndPlayer) {
-      print(roomAndPlayer);
+  void _initializeListeners() {
+    socket.on('update_room', (roomAndPlayer) {
+      print('Update room event received: ${roomAndPlayer.toString()}');
       RoomModel roomData = RoomModel.fromMap(roomAndPlayer['roomData']);
-      PlayerModel player = PlayerModel.fromMap(roomAndPlayer['thisPlayer']);
-      fun(roomData, player);
+      RoundModel round = RoundModel.fromMap(roomAndPlayer['round']);
+      _eventController.add(SyncDataEvent(roomData: roomData, roundData: round));
     });
-  }
 
-  void pointsToDrawListener(Function fun) {
-    socket?.off('points_to_draw');
-    socket?.on('points_to_draw', (points) {
+    socket.on('start_timer', (data) {
+      final startTime = data['startTime'];
+      final duration = data['duration'];
+
+      _eventController
+          .add(StartTimerEvent(startTime: startTime, duration: duration));
+    });
+
+    socket.on('points_to_draw', (points) {
       for (var point in points) {
         if (point != null) {
-          print(point);
-          fun(PointModel.fromJson(point));
+          _eventController
+              .add(PointsToDrawEvent(pointModel: PointModel.fromJson(point)));
         } else {
-          fun(null);
+          _eventController.add(PointsToDrawEvent(pointModel: null));
         }
       }
     });
-  }
 
-  void colorChangeListener(Function fun) {
-    socket?.off('color_change');
-    socket?.on('color_change', (colorString) {
-      int value = int.parse(colorString, radix: 16);
-      Color updatedColor = Color(value);
-      fun(updatedColor);
+    socket.on('color_change', (colorString) {
+      _eventController
+          .add(ColorChangeEvent(colorValue: int.parse(colorString, radix: 16)));
     });
-  }
 
-  void strokeWidthListener(Function fun) {
-    socket?.off('stroke_width');
-    socket?.on('stroke_width', (value) {
-      fun(value.toDouble());
+    socket.on('stroke_width', (value) {
+      _eventController
+          .add(StrokeWidthChangeEvent(strokeWidth: value.toDouble()));
     });
-  }
 
-  void eraseAllListener(Function fun) {
-    socket?.off('erase_all');
-    socket?.on('erase_all', (_) {
-      fun();
+    socket.on('erase_all', (_) {
+      _eventController.add(EraseAllEvent());
     });
-  }
 
-  void msgListener(Function fun) {
-    socket?.off('msg');
-    socket?.on('msg', (data) {
-      fun(data);
+    socket.on('msg', (data) {
+      _eventController.add(MsgEvent(msg: data));
     });
-  }
 
-  void changeTurnListener(Function fun) {
-    socket?.off('change_turn');
-    socket?.on('change_turn', (data) {
+    socket.on('show_leader_board', (data) {
       RoomModel roomData = RoomModel.fromMap(data);
-      fun(roomData);
+      _eventController.add(ShowLeaderboardEvent(roomData: roomData));
     });
-  }
 
-  void closeInputListener(Function fun) {
-    socket?.off('close_input');
-    socket?.on('close_input', (_) {
-      fun();
-    });
-  }
-
-  void updateScoreListener(Function fun) {
-    socket?.off('update_score');
-    socket?.on('update_score', (data) {
-      RoomModel roomData = RoomModel.fromMap(data);
-      fun(roomData);
-    });
-  }
-
-  void showLeaderBoardListener(Function fun) {
-    socket?.off('show_leader_board');
-    socket?.on('show_leader_board', (data) {
-      RoomModel roomData = RoomModel.fromMap(data);
-      fun(roomData);
-    });
-  }
-
-  void userDisconnectedListener(Function fun) {
-    socket?.off('user_disconnected');
-    socket?.on('user_disconnected', (roomAndWhoDisconnected) {
+    socket.on('user_disconnected', (roomAndWhoDisconnected) {
       RoomModel roomData =
           RoomModel.fromMap(roomAndWhoDisconnected['roomData']);
       PlayerModel player =
           PlayerModel.fromMap(roomAndWhoDisconnected['playerWhoDisconnected']);
-      fun(roomData, player);
+      _eventController.add(SomeoneDisconnectedEvent(
+          roomData: roomData, disconnectedUser: player));
+    });
+
+    socket.on('notCorrectGame', (err) {
+      _eventController.add(NotCorrectGameEvent(err));
     });
   }
 
-  void notCorrectGameListener(Function fun) {
-    socket?.on('notCorrectGame', (err) {
-      fun(err);
-    });
+  void createGame(Map data) {
+    socket.emit('create_game', data);
   }
 
-  void onDisconnectListener() {
-    socket?.onDisconnect((data) => print("disconnected"));
+  void joinGame(Map data) {
+    socket.emit('join_game', data);
   }
 
-  void onConnectErrorListener() {
-    socket?.onConnectError((data) => print(data));
+  void dispose() {
+    _eventController.close();
+    socket.off('update_room');
+    socket.off('sync_timer');
+    socket.off('points_to_draw');
+    socket.off('color_change');
+    socket.off('stroke_width');
+    socket.off('erase_all');
+    socket.off('msg');
+    socket.off('show_leader_board');
+    socket.off('user_disconnected');
+    socket.off('notCorrectGame');
   }
 }

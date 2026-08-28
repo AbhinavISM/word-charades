@@ -4,27 +4,31 @@ import 'dart:convert';
 class PlayerModel {
   String nickName;
   String socketId;
-  bool isRoomLeader;
+  bool canMsg;
   int points;
+  bool guessed;
 
   PlayerModel({
     required this.nickName,
     required this.socketId,
-    required this.isRoomLeader,
+    required this.canMsg,
     required this.points,
+    required this.guessed,
   });
 
   PlayerModel copyWith({
     String? nickName,
     String? socketId,
-    bool? isRoomLeader,
+    bool? canMsg,
     int? points,
+    bool? guessed,
   }) {
     return PlayerModel(
       nickName: nickName ?? this.nickName,
       socketId: socketId ?? this.socketId,
-      isRoomLeader: isRoomLeader ?? this.isRoomLeader,
+      canMsg: canMsg ?? this.canMsg,
       points: points ?? this.points,
+      guessed: guessed ?? this.guessed,
     );
   }
 
@@ -32,17 +36,19 @@ class PlayerModel {
     return <String, dynamic>{
       'nickName': nickName,
       'socketId': socketId,
-      'isRoomLeader': isRoomLeader,
+      'canMsg': canMsg,
       'points': points,
+      'guessed': guessed,
     };
   }
 
   factory PlayerModel.fromMap(Map<String, dynamic> map) {
     return PlayerModel(
-      nickName: map['nick_name'] as String,
-      socketId: map['socket_id'] as String,
-      isRoomLeader: map['is_room_leader'] as bool,
+      nickName: map['nickName'] as String,
+      socketId: map['socketId'] as String,
+      canMsg: map['canMsg'] as bool,
       points: map['points'] as int,
+      guessed: map['guessed'] as bool,
     );
   }
 
@@ -53,7 +59,7 @@ class PlayerModel {
 
   @override
   String toString() {
-    return 'PlayerModel(nickName: $nickName, socketId: $socketId, isRoomLeader: $isRoomLeader, points: $points)';
+    return 'PlayerModel(nickName: $nickName, socketId: $socketId, canMsg: $canMsg, points: $points, guessed: $guessed)';
   }
 
   @override
@@ -62,15 +68,17 @@ class PlayerModel {
 
     return other.nickName == nickName &&
         other.socketId == socketId &&
-        other.isRoomLeader == isRoomLeader &&
-        other.points == points;
+        other.canMsg == canMsg &&
+        other.points == points &&
+        other.guessed == guessed;
   }
 
   @override
   int get hashCode {
     return nickName.hashCode ^
         socketId.hashCode ^
-        isRoomLeader.hashCode ^
-        points.hashCode;
+        canMsg.hashCode ^
+        points.hashCode ^
+        guessed.hashCode;
   }
 }

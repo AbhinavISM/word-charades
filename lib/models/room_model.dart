@@ -12,8 +12,6 @@ class RoomModel {
   int currentRound;
   List<PlayerModel> players;
   bool canJoin;
-  PlayerModel turn;
-  int turnIndex;
 
   RoomModel({
     required this.word,
@@ -23,8 +21,6 @@ class RoomModel {
     required this.currentRound,
     required this.players,
     required this.canJoin,
-    required this.turn,
-    required this.turnIndex,
   });
 
   RoomModel copyWith({
@@ -35,8 +31,6 @@ class RoomModel {
     int? currentRound,
     List<PlayerModel>? players,
     bool? canJoin,
-    PlayerModel? turn,
-    int? turnIndex,
   }) {
     return RoomModel(
       word: word ?? this.word,
@@ -46,8 +40,6 @@ class RoomModel {
       currentRound: currentRound ?? this.currentRound,
       players: players ?? this.players,
       canJoin: canJoin ?? this.canJoin,
-      turn: turn ?? this.turn,
-      turnIndex: turnIndex ?? this.turnIndex,
     );
   }
 
@@ -60,26 +52,22 @@ class RoomModel {
       'currentRound': currentRound,
       'players': players.map((x) => x.toMap()).toList(),
       'canJoin': canJoin,
-      'turn': turn.toMap(),
-      'turnIndex': turnIndex,
     };
   }
 
   factory RoomModel.fromMap(Map<String, dynamic> map) {
     return RoomModel(
       word: map['word'] as String,
-      roomName: map['room_name'] as String,
-      roomSize: map['room_size'] as int,
-      maxRounds: map['max_rounds'] as int,
-      currentRound: map['current_round'] as int,
+      roomName: map['roomName'] as String,
+      roomSize: map['roomSize'] as int,
+      maxRounds: map['maxRounds'] as int,
+      currentRound: map['currentRound'] as int,
       players: List<PlayerModel>.from(
         (map['players'] as List<dynamic>).map<PlayerModel>(
           (x) => PlayerModel.fromMap(x as Map<String, dynamic>),
         ),
       ),
-      canJoin: map['can_join'],
-      turn: PlayerModel.fromMap(map['turn'] as Map<String, dynamic>),
-      turnIndex: map['turn_index'],
+      canJoin: map['canJoin'],
     );
   }
 
@@ -90,7 +78,7 @@ class RoomModel {
 
   @override
   String toString() {
-    return 'RoomModel(word: $word, roomName: $roomName, roomSize: $roomSize, maxRounds: $maxRounds, currentRound: $currentRound, players: $players, canJoin: $canJoin, turn: $turn, turnIndex: $turnIndex)';
+    return 'RoomModel(word: $word, roomName: $roomName, roomSize: $roomSize, maxRounds: $maxRounds, currentRound: $currentRound, players: $players, canJoin: $canJoin)';
   }
 
   @override
@@ -103,9 +91,7 @@ class RoomModel {
         other.maxRounds == maxRounds &&
         other.currentRound == currentRound &&
         listEquals(other.players, players) &&
-        other.canJoin == canJoin &&
-        other.turn == turn &&
-        other.turnIndex == turnIndex;
+        other.canJoin == canJoin;
   }
 
   @override
@@ -116,8 +102,6 @@ class RoomModel {
         maxRounds.hashCode ^
         currentRound.hashCode ^
         players.hashCode ^
-        canJoin.hashCode ^
-        turn.hashCode ^
-        turnIndex.hashCode;
+        canJoin.hashCode;
   }
 }

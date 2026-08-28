@@ -1,13 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:yayscribbl/main.dart';
-import 'package:yayscribbl/models/point_model.dart';
+import 'package:yayscribbl/models/paint_screen_ui_commands.dart';
 import 'package:yayscribbl/presentation/finish_game/final_leader_board.dart';
-import 'package:yayscribbl/presentation/game/my_clipper.dart';
-import 'package:yayscribbl/presentation/game/my_custom_painter.dart';
 import 'package:yayscribbl/presentation/game/paint_screen_vm.dart';
 import 'package:yayscribbl/presentation/waiting/waiting_screen.dart';
+import 'package:yayscribbl/utils/my_clipper.dart';
+import 'package:yayscribbl/utils/my_custom_painter.dart';
 import 'package:yayscribbl/widgets/side_drawer.dart';
 
 class ImprovedPaintScreen extends ConsumerStatefulWidget {
@@ -19,11 +21,35 @@ class ImprovedPaintScreen extends ConsumerStatefulWidget {
 }
 
 class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
+  final msgController = TextEditingController();
+  final scrollController = ScrollController();
+  late final StreamSubscription<PaintScreenUiCommands>
+      paintScreenUiCommandsSubscription;
+
   @override
   void initState() {
     print('init state ran');
-    ref.read(paintScreenVMprovider).setupVoiceSDKEngine();
+    // ref.read(paintScreenVMprovider).setupVoiceSDKEngine();
+    paintScreenUiCommandsSubscription = ref
+        .read(paintScreenVMprovider)
+        .paintScreenUIEventStream
+        .listen(handleUICommands);
     super.initState();
+  }
+
+  void handleUICommands(PaintScreenUiCommands event) {
+    switch (event) {
+      case ClearMsgEvent():
+        msgController.clear();
+        break;
+      case ScrollEvent():
+        scrollController.animateTo(
+          scrollController.position.maxScrollExtent + 40,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+        );
+        break;
+    }
   }
 
   @override
@@ -33,89 +59,57 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
 
   @override
   void dispose() {
-    // socket.dispose();
-    final paintScreenVM = ref.read(paintScreenVMprovider);
-    paintScreenVM.firstBuild = true;
-    paintScreenVM.timer.cancel();
-    paintScreenVM.roomDataWrap.updateDataOfRoom(null);
-    paintScreenVM.leave();
-    ref.read(paintScreenVMprovider).dispose();
+    msgController.dispose();
+    scrollController.dispose();
+    paintScreenUiCommandsSubscription.cancel();
+    // paintScreenVM.leave();
     super.dispose();
-  }
-
-  void onFirstBuild(PaintScreenVM paintScreenVM) {
-    //can_join means true means someone is still left to join
-    if (paintScreenVM.roomDataWrap.roomData!.canJoin == true) {
-      return;
-    }
-    paintScreenVM
-        .renderHiddenTextWidget(paintScreenVM.roomDataWrap.roomData!.word);
-    paintScreenVM.startTimer();
-    paintScreenVM.firstBuild = false;
   }
 
   @override
   Widget build(BuildContext context) {
     final paintScreenVM = ref.watch(paintScreenVMprovider);
-    paintScreenVM.nickName =
-        ModalRoute.of(context)?.settings.arguments as String;
     print('vmid : ${identityHashCode(paintScreenVM)}');
-    if (paintScreenVM.firstBuild) {
-      print('first build just ran');
-      Future.delayed(Duration.zero)
-          .then((value) => {onFirstBuild(paintScreenVM)});
-    }
 
     return Scaffold(
       drawer: _buildDrawer(paintScreenVM),
       floatingActionButton: _timerFloatingActionButton(paintScreenVM),
       key: paintScreenVM.scaffoldKey,
-      body: paintScreenVM.roomDataWrap.roomData != null
-          ? paintScreenVM.roomDataWrap.roomData!.canJoin != true
-              ? _buildGame(paintScreenVM)
-              : WaitingScreen(
-                  roomName: paintScreenVM.roomDataWrap.roomData!.roomName,
-                  currentRoomSize:
-                      paintScreenVM.roomDataWrap.roomData!.players.length,
-                  roomSize: paintScreenVM.roomDataWrap.roomData!.roomSize,
-                  playersList: paintScreenVM.roomDataWrap.roomData!.players,
-                )
-          : const Center(
-              child: CircularProgressIndicator(),
+      body: paintScreenVM.roomDataWrap.roomData!.canJoin != true
+          ? _buildGame(paintScreenVM)
+          : WaitingScreen(
+              roomName: paintScreenVM.roomDataWrap.roomData!.roomName,
+              currentRoomSize:
+                  paintScreenVM.roomDataWrap.roomData!.players.length,
+              roomSize: paintScreenVM.roomDataWrap.roomData!.roomSize,
+              playersList: paintScreenVM.roomDataWrap.roomData!.players,
             ),
     );
   }
 
   Widget _buildGame(PaintScreenVM paintScreenVM) {
-    return StreamBuilder(
-      stream: paintScreenVM.showFinalLeaderboardController.stream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting ||
-            snapshot.data == false) {
-          return SafeArea(
-            child: Column(
-              children: [
-                _buildAppBar(paintScreenVM),
-                Expanded(
-                  flex: 3,
-                  child: _buildDrawingArea(paintScreenVM),
-                ),
-                _buildSlider(paintScreenVM),
-                Expanded(
-                  flex: 2,
-                  child: _buildChatArea(paintScreenVM),
-                ),
-                _buildInputArea(paintScreenVM),
-              ],
+    if (paintScreenVM.showFinalLeaderboard) {
+      return SafeArea(
+        child: Column(
+          children: [
+            _buildAppBar(paintScreenVM),
+            Expanded(
+              flex: 3,
+              child: _buildDrawingArea(paintScreenVM),
             ),
-          );
-        } else {
-          print('databystream : ${snapshot.data ?? ' still waiting'}');
-          return FinalLeaderBoard(
-              playersList: paintScreenVM.roomDataWrap.roomData!.players);
-        }
-      },
-    );
+            _buildSlider(paintScreenVM),
+            Expanded(
+              flex: 2,
+              child: _buildChatArea(paintScreenVM),
+            ),
+            _buildInputArea(paintScreenVM),
+          ],
+        ),
+      );
+    } else {
+      return FinalLeaderBoard(
+          playersList: paintScreenVM.roomDataWrap.roomData!.players);
+    }
   }
 
   Widget _buildDrawer(PaintScreenVM paintScreenVM) {
@@ -134,7 +128,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
         elevation: 7,
         backgroundColor: Colors.white,
         child: Text(
-          '${paintScreenVM.timeLeft}',
+          '${paintScreenVM.secondsRemaining}',
           style: const TextStyle(color: Colors.black, fontSize: 22),
         ),
       ),
@@ -148,27 +142,11 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
         children: [
           IconButton(
             icon: const Icon(Icons.menu),
-            onPressed: () =>
-                paintScreenVM.scaffoldKey.currentState!.openDrawer(),
+            onPressed: () => paintScreenVM.openDrawer(),
           ),
         ],
       ),
     );
-  }
-
-  void _emitPoints(PaintScreenVM paintScreenVM, double? dx, double? dy,
-      double canvasWidth, double canvasHeight) {
-    print('emitdx : $dx , emitdy : $dy\n');
-    PointModel? point;
-    if (dx != null && dy != null) {
-      point = PointModel(
-        dx: dx.toDouble(),
-        dy: dy.toDouble(),
-        sourceDrawingWidth: canvasWidth.toDouble(),
-        sourceDrawingHeight: canvasHeight.toDouble(),
-      );
-    }
-    paintScreenVM.sendPoints(point);
   }
 
   Widget _buildDrawingArea(PaintScreenVM paintScreenVM) {
@@ -183,9 +161,14 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
           paintScreenVM.canvasHeight = constraints.maxHeight;
           return GestureDetector(
             onPanUpdate: (details) {
-              if (paintScreenVM.roomDataWrap.roomData!.turn.nickName ==
-                  paintScreenVM.nickName) {
-                _emitPoints(
+              if (paintScreenVM
+                      .roomDataWrap
+                      .roomData!
+                      .players[
+                          paintScreenVM.roundDataWrap.roundModel!.turnIndex]
+                      .nickName ==
+                  paintScreenVM.playerDataWrap.playerModel!.nickName) {
+                paintScreenVM.sendPoints(
                     paintScreenVM,
                     details.localPosition.dx,
                     details.localPosition.dy,
@@ -194,9 +177,14 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
               }
             },
             onPanStart: (details) {
-              if (paintScreenVM.roomDataWrap.roomData!.turn.nickName ==
-                  paintScreenVM.nickName) {
-                _emitPoints(
+              if (paintScreenVM
+                      .roomDataWrap
+                      .roomData!
+                      .players[
+                          paintScreenVM.roundDataWrap.roundModel!.turnIndex]
+                      .nickName ==
+                  paintScreenVM.playerDataWrap.playerModel!.nickName) {
+                paintScreenVM.sendPoints(
                     paintScreenVM,
                     details.localPosition.dx,
                     details.localPosition.dy,
@@ -205,10 +193,15 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
               }
             },
             onPanEnd: (details) {
-              if (paintScreenVM.roomDataWrap.roomData!.turn.nickName ==
-                  paintScreenVM.nickName) {
-                _emitPoints(paintScreenVM, null, null, constraints.maxWidth,
-                    constraints.maxHeight);
+              if (paintScreenVM
+                      .roomDataWrap
+                      .roomData!
+                      .players[
+                          paintScreenVM.roundDataWrap.roundModel!.turnIndex]
+                      .nickName ==
+                  paintScreenVM.playerDataWrap.playerModel!.nickName) {
+                paintScreenVM.sendPoints(paintScreenVM, null, null,
+                    constraints.maxWidth, constraints.maxHeight);
               }
             },
             child: RepaintBoundary(
@@ -238,17 +231,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
             content: SingleChildScrollView(
               child: BlockPicker(
                 pickerColor: paintScreenVM.selectedColor,
-                onColorChanged: ((color) {
-                  String colorString = color.toString();
-                  String valueString =
-                      colorString.split('(0x')[1].split(')')[0];
-                  Map map = {
-                    'color': valueString,
-                    'room_name': paintScreenVM.roomDataWrap.roomData!.roomName
-                  };
-                  paintScreenVM.socketRepository.socket
-                      ?.emit('color_change', map);
-                }),
+                onColorChanged: paintScreenVM.changeColor,
               ),
             ),
             actions: [
@@ -266,8 +249,12 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
   Widget _buildSlider(PaintScreenVM paintScreenVM) {
     return Column(
       children: [
-        paintScreenVM.roomDataWrap.roomData!.turn.nickName ==
-                paintScreenVM.nickName
+        paintScreenVM
+                    .roomDataWrap
+                    .roomData!
+                    .players[paintScreenVM.roundDataWrap.roundModel!.turnIndex]
+                    .nickName ==
+                paintScreenVM.playerDataWrap.playerModel!.nickName
             ? Row(
                 children: [
                   IconButton(
@@ -286,35 +273,28 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
                       label: 'Strokewidth $paintScreenVM.strokeWidth',
                       value: paintScreenVM.strokeWidth,
                       activeColor: paintScreenVM.selectedColor,
-                      onChanged: (double value) {
-                        Map map = {
-                          'value': value,
-                          'room_name':
-                              paintScreenVM.roomDataWrap.roomData!.roomName,
-                        };
-                        paintScreenVM.socketRepository.socket
-                            ?.emit('stroke_width', map);
-                      },
+                      onChanged: paintScreenVM.changeStrokeWidth,
                     ),
                   ),
                   IconButton(
-                    onPressed: () {
-                      paintScreenVM.socketRepository.socket?.emit('erase_all',
-                          paintScreenVM.roomDataWrap.roomData!.roomName);
-                    },
+                    onPressed: paintScreenVM.eraseAll,
                     icon: const Icon(Icons.clear_all),
                   )
                 ],
               )
             : Center(
                 child: Text(
-                  "${paintScreenVM.roomDataWrap.roomData!.turn.nickName} is drawing..",
+                  "${paintScreenVM.roomDataWrap.roomData!.players[paintScreenVM.roundDataWrap.roundModel!.turnIndex].nickName} is drawing..",
                   style: const TextStyle(
                       fontSize: 17, fontWeight: FontWeight.bold),
                 ),
               ),
-        paintScreenVM.roomDataWrap.roomData!.turn.nickName !=
-                paintScreenVM.nickName
+        paintScreenVM
+                    .roomDataWrap
+                    .roomData!
+                    .players[paintScreenVM.roundDataWrap.roundModel!.turnIndex]
+                    .nickName !=
+                paintScreenVM.playerDataWrap.playerModel!.nickName
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: paintScreenVM.hiddenTextWidget,
@@ -342,7 +322,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            paintScreenVM.messages[index]["sender_name"],
+            paintScreenVM.messages[index]["senderName"],
             style: const TextStyle(
               color: Colors.pink,
               fontWeight: FontWeight.bold,
@@ -361,7 +341,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
 
   Widget _buildChatArea(PaintScreenVM paintScreenVM) {
     return ListView.builder(
-      controller: paintScreenVM.scrollController,
+      controller: scrollController,
       shrinkWrap: true,
       itemCount: paintScreenVM.messages.length,
       itemBuilder: (context, index) {
@@ -371,34 +351,16 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
   }
 
   Widget _buildInputArea(PaintScreenVM paintScreenVM) {
-    return paintScreenVM.roomDataWrap.roomData!.turn.nickName !=
-            paintScreenVM.nickName
+    return paintScreenVM.playerDataWrap.playerModel!.canMsg
         ? Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
-                    readOnly: paintScreenVM.alreadyGuessedByMe,
-                    controller: paintScreenVM.controller,
-                    onSubmitted: ((value) {
-                      if (value.trim().isNotEmpty) {
-                        Map msgMap = {
-                          'sender_name': paintScreenVM.nickName,
-                          'message': value.trim(),
-                          'word': paintScreenVM.roomDataWrap.roomData!.word,
-                          'room_name':
-                              paintScreenVM.roomDataWrap.roomData!.roomName,
-                          'guessedUserCounter':
-                              paintScreenVM.guessedUserCounter,
-                          'total_time': 60,
-                          'time_taken': 60 - paintScreenVM.timeLeft,
-                        };
-                        paintScreenVM.socketRepository.socket
-                            ?.emit('msg', msgMap);
-                        paintScreenVM.controller.clear();
-                      }
-                    }),
+                    readOnly: paintScreenVM.playerDataWrap.playerModel!.guessed,
+                    controller: msgController,
+                    onSubmitted: paintScreenVM.sendMsg,
                     autocorrect: false,
                     decoration: InputDecoration(
                       hintText: 'Type a message',
@@ -421,23 +383,7 @@ class _ImprovedPaintScreenState extends ConsumerState<ImprovedPaintScreen> {
                   child: IconButton(
                     icon: const Icon(Icons.send, color: Colors.white),
                     onPressed: () {
-                      String value = paintScreenVM.controller.text;
-                      if (value.trim().isNotEmpty) {
-                        Map msgMap = {
-                          'sender_name': paintScreenVM.nickName,
-                          'message': value.trim(),
-                          'word': paintScreenVM.roomDataWrap.roomData!.word,
-                          'room_name':
-                              paintScreenVM.roomDataWrap.roomData!.roomName,
-                          'guessedUserCounter':
-                              paintScreenVM.guessedUserCounter,
-                          'total_time': 60,
-                          'time_taken': 60 - paintScreenVM.timeLeft,
-                        };
-                        paintScreenVM.socketRepository.socket
-                            ?.emit('msg', msgMap);
-                        paintScreenVM.controller.clear();
-                      }
+                      paintScreenVM.sendMsg(msgController.text);
                     },
                   ),
                 ),

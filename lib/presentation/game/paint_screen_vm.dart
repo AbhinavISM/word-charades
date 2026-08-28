@@ -1,30 +1,62 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:yayscribbl/models/batch_processing_events.dart';
+import 'package:yayscribbl/models/paint_screen_ui_commands.dart';
+import 'package:yayscribbl/models/player_data_provider.dart';
 import 'package:yayscribbl/models/player_model.dart';
 import 'package:yayscribbl/models/point_model.dart';
 import 'package:yayscribbl/models/room_data_provider.dart';
 import 'package:yayscribbl/models/room_model.dart';
+import 'package:yayscribbl/models/round_data_provider.dart';
+import 'package:yayscribbl/models/round_model.dart';
+import 'package:yayscribbl/models/socket_events.dart';
+import 'package:yayscribbl/utils/point_throttler.dart';
 import 'package:yayscribbl/repository/socket_repository.dart';
-
-const String appId = "241714311a2a48569fd152d4411e5a9b";
 
 class PaintScreenVM extends ChangeNotifier {
   final RoomDataWrap roomDataWrap;
+  final PlayerDataWrap playerDataWrap;
+  final RoundDataWrap roundDataWrap;
   final SocketRepository socketRepository;
   final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey;
+  final PointThrottler pointThrottler;
+
+  late final StreamSubscription<SocketEvent> _socketSubscription;
+  late final StreamSubscription<BatchProcessingEvents>
+      _batchProcessingStreamSub;
 
   PaintScreenVM(
-      this.roomDataWrap, this.socketRepository, this.scaffoldMessengerKey) {
-    connect();
+      this.roomDataWrap,
+      this.socketRepository,
+      this.scaffoldMessengerKey,
+      this.playerDataWrap,
+      this.roundDataWrap,
+      this.pointThrottler) {
+    _socketSubscription =
+        socketRepository.eventStream.listen(_handleSocketEvent);
+    _batchProcessingStreamSub = pointThrottler.batchProcessingEventStream
+        .listen(handleBatchProcessingEvents);
   }
+
+  void handleBatchProcessingEvents(BatchProcessingEvents event) {
+    switch (event) {
+      case BatchTimerFinished():
+        _sendPoints(event.processedPoints);
+    }
+  }
+
+  void _sendPoints(List<PointModel?> points) {
+    socketRepository.socket.emit('paint', {
+      'details': points.map((p) => p?.toJson()).toList(),
+      'roomName': roomDataWrap.roomData!.roomName,
+    });
+  }
+
+  //drawing state
   double? canvasWidth;
   double? canvasHeight;
-  bool firstBuild = true;
-  late String nickName;
   List<Path> paths = [];
   List<Paint> pathPaints = [];
   List<List<PointModel>> pathPoints = [];
@@ -32,103 +64,101 @@ class PaintScreenVM extends ChangeNotifier {
   Color selectedColor = Colors.black;
   double opacity = 1;
   double strokeWidth = 2;
+
+  //game state
   List<Widget> hiddenTextWidget = [];
-  ScrollController scrollController = ScrollController();
   List<Map> messages = [];
-  TextEditingController controller = TextEditingController();
-  int guessedUserCounter = 0;
-  int timeLeft = 60;
-  var scaffoldKey = GlobalKey<ScaffoldState>();
-  late Timer timer;
-  bool alreadyGuessedByMe = false;
+
   int winnerPoints = 0;
   String winner = '';
-  // bool showFinalLeaderboard = false;
-  final StreamController<bool> showFinalLeaderboardController =
-      StreamController.broadcast();
 
-  setFirstBuild(bool b) {
-    firstBuild = b;
-    notifyListeners();
+  int secondsRemaining = 0;
+  bool isRunning = false;
+  Timer? _ticker;
+  DateTime? _endTime;
+
+  //misc
+  var scaffoldKey = GlobalKey<ScaffoldState>();
+  final _paintScreenUIEventStreamController =
+      StreamController<PaintScreenUiCommands>();
+  Stream<PaintScreenUiCommands> get paintScreenUIEventStream =>
+      _paintScreenUIEventStreamController.stream;
+  Sink<PaintScreenUiCommands> get _paintScreenUIEventSink =>
+      _paintScreenUIEventStreamController.sink;
+
+  bool showFinalLeaderboard = false;
+
+  void _handleSocketEvent(SocketEvent event) {
+    switch (event) {
+      case SyncDataEvent():
+        syncDataEx(roomData: event.roomData, roundData: event.roundData);
+        break;
+      case StartTimerEvent():
+        startTimerEx(event.startTime, event.duration);
+        break;
+      case PointsToDrawEvent():
+        pointsToDrawEx(point: event.pointModel);
+        break;
+      case ColorChangeEvent():
+        updatedColorEx(event.colorValue);
+        break;
+      case StrokeWidthChangeEvent():
+        strokeWidthEx(event.strokeWidth);
+        break;
+      case EraseAllEvent():
+        eraseAllEx();
+        break;
+      case MsgEvent():
+        msgEx(event.msg);
+        break;
+      case ShowLeaderboardEvent():
+        showLeaderBoardEx(event.roomData);
+      case SomeoneDisconnectedEvent():
+        someoneDisonnectedEx(event.roomData, event.disconnectedUser);
+        break;
+      case SocketConnectedEvent():
+        print('socket connected');
+      case SocketDisconnectedEvent():
+        print('socket disconnected');
+      case _:
+        break;
+    }
   }
 
-  void connect() {
-    socketRepository.updateRoomListener(updateRoomEx);
-    socketRepository.pointsToDrawListener(pointsToDrawEx);
-    socketRepository.colorChangeListener(updatedColorEx);
-    socketRepository.strokeWidthListener(strokeWidthEx);
-    socketRepository.eraseAllListener(eraseAllEx);
-    socketRepository.msgListener(msgEx);
-    socketRepository.changeTurnListener(changeTurnEx);
-    socketRepository.closeInputListener(closeInputEx);
-    socketRepository.updateScoreListener(updateScoreEx);
-    socketRepository.showLeaderBoardListener(showLeaderBoardEx);
-    socketRepository.userDisconnectedListener(userDisonnectedEx);
-    socketRepository.onDisconnectListener();
-    socketRepository.onConnectErrorListener();
+  void startTimerEx(int serverStartTimeMillis, int durationSeconds) {
+    final serverStartTime =
+        DateTime.fromMillisecondsSinceEpoch(serverStartTimeMillis);
+    _endTime = serverStartTime.add(Duration(seconds: durationSeconds));
+    _startLocalLoop();
   }
 
-  void userDisonnectedEx(RoomModel roomData, PlayerModel disconnectedUser) {
-    roomDataWrap.updateDataOfRoom(roomData);
-    final disconnectedNickName = disconnectedUser.nickName;
-    scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(content: Text('{$disconnectedNickName} disconnected')));
-  }
+  void _startLocalLoop() {
+    _ticker?.cancel();
 
-  late RtcEngine agoraEngine;
-  String token = '';
-  int uid = 0; // uid of the local user
-  Future<void> setupVoiceSDKEngine() async {
-    // retrieve or request microphone permission
-    await [Permission.microphone].request();
+    // We tick fast (e.g., every 100ms) to ensure the UI feels responsive
+    // and we don't miss the moment it hits 0.
+    _ticker = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      final now = DateTime.now();
 
-    //create an instance of the Agora engine
-    agoraEngine = createAgoraRtcEngine();
-    await agoraEngine.initialize(const RtcEngineContext(appId: appId));
+      // Calculate remaining difference
+      final difference = _endTime!.difference(now);
+      final secondsLeft = difference.inSeconds;
 
-    // Register the event handler
-    agoraEngine.registerEventHandler(
-      RtcEngineEventHandler(
-        onJoinChannelSuccess: (RtcConnection connection, int elapsed) {},
-        onUserJoined: (RtcConnection connection, int remoteUid, int elapsed) {},
-        onUserOffline: (RtcConnection connection, int remoteUid,
-            UserOfflineReasonType reason) {},
-      ),
-    );
-    join();
-  }
-
-  void join() async {
-    uid = DateTime.now().millisecondsSinceEpoch;
-    // Set channel options including the client role and channel profile
-    ChannelMediaOptions options = const ChannelMediaOptions(
-      clientRoleType: ClientRoleType.clientRoleBroadcaster,
-      channelProfile: ChannelProfileType.channelProfileCommunication,
-    );
-
-    await agoraEngine.joinChannel(
-      channelId: roomDataWrap.roomData!.roomName,
-      options: options,
-      uid: uid,
-      token: token,
-    );
-  }
-
-  void leave() async {
-    await agoraEngine.leaveChannel();
-  }
-
-  void startTimer() {
-    timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (timeLeft == 0 && roomDataWrap.roomData!.turn.nickName == nickName) {
-        socketRepository.socket
-            ?.emit('change_turn', roomDataWrap.roomData!.roomName);
-        timer.cancel();
+      if (secondsLeft <= 0) {
+        stopTimer();
       } else {
-        timeLeft--;
+        if (secondsRemaining != secondsLeft) {
+          secondsRemaining = secondsLeft;
+          isRunning = true;
+        }
       }
-      notifyListeners();
     });
+  }
+
+  void stopTimer() {
+    _ticker?.cancel();
+    secondsRemaining = 0;
+    isRunning = false;
   }
 
   void renderHiddenTextWidget(String text) {
@@ -142,82 +172,66 @@ class PaintScreenVM extends ChangeNotifier {
     notifyListeners();
   }
 
-  Timer? _batchTimer;
-  List<PointModel?> _pointBuffer = [];
-  List<PointModel?> _processingBuffer = [];
-  bool _isProcessing = false;
+  void openDrawer() {
+    scaffoldKey.currentState!.openDrawer();
+  }
 
-  void _processPoints() {
-    if (_pointBuffer.isEmpty || _isProcessing) return;
+  void sendPoints(PaintScreenVM paintScreenVM, double? dx, double? dy,
+      double canvasWidth, double canvasHeight) {
+    print('emitdx : $dx , emitdy : $dy\n');
+    PointModel? point;
+    if (dx != null && dy != null) {
+      point = PointModel(
+        dx: dx.toDouble(),
+        dy: dy.toDouble(),
+        sourceDrawingWidth: canvasWidth.toDouble(),
+        sourceDrawingHeight: canvasHeight.toDouble(),
+      );
+    }
+    pointThrottler.addPoint(point);
+    pointsToDrawEx(point: point);
+  }
 
-    try {
-      _isProcessing = true;
+  void changeColor(Color color) {
+    String colorString = color.toString();
+    String valueString = colorString.split('(0x')[1].split(')')[0];
+    Map map = {
+      'color': valueString,
+      'roomName': roomDataWrap.roomData!.roomName
+    };
+    socketRepository.socket.emit('color_change', map);
+  }
 
-      _processingBuffer = _pointBuffer;
-      _pointBuffer = [];
+  void changeStrokeWidth(double value) {
+    Map map = {
+      'value': value,
+      'roomName': roomDataWrap.roomData!.roomName,
+    };
+    socketRepository.socket.emit('stroke_width', map);
+  }
 
-      socketRepository.socket?.emit('paint', {
-        'details': _processingBuffer.map((p) => p?.toJson()).toList(),
-        'room_name': roomDataWrap.roomData!.roomName,
-      });
-
-      _processingBuffer.clear();
-    } catch (e) {
-      print('Error preparing points for sending: $e');
-      // Recover points if preparation failed
-      _pointBuffer.insertAll(0, _processingBuffer);
-    } finally {
-      _isProcessing = false;
-      // If there are new points that arrived during processing,
-      // start a new batch timer
-      if (_pointBuffer.isNotEmpty) {
-        _startBatchTimer();
-      }
+  void sendMsg(String value) {
+    if (value.trim().isNotEmpty) {
+      Map msgMap = {
+        'senderName': playerDataWrap.playerModel!.nickName,
+        'message': value.trim(),
+        'roomName': roomDataWrap.roomData!.roomName,
+      };
+      socketRepository.socket.emit('msg', msgMap);
+      _paintScreenUIEventSink.add(ClearMsgEvent());
     }
   }
 
-  void _startBatchTimer() {
-    // Only start a new timer if one isn't already running
-    if (_batchTimer == null || !_batchTimer!.isActive) {
-      _batchTimer = Timer(const Duration(milliseconds: 16), () {
-        _processPoints();
-      });
-    }
-  }
-
-  void sendPoints(PointModel? point) {
-    _pointBuffer.add(point);
-    _startBatchTimer();
-    pointsToDrawEx(point);
+  void eraseAll() {
+    socketRepository.socket.emit('erase_all', roomDataWrap.roomData!.roomName);
   }
 
   @override
   void dispose() {
+    pointThrottler.cancel();
+    _socketSubscription.cancel();
+    _batchProcessingStreamSub.cancel();
     super.dispose();
-    _batchTimer?.cancel();
-    // Process remaining points one last time
-    if (_pointBuffer.isNotEmpty) {
-      _processPoints();
-    }
-  }
-
-  void updateRoomEx(RoomModel roomData, PlayerModel player) {
-    roomDataWrap.updateDataOfRoom(roomData);
-    renderHiddenTextWidget(roomData.word);
-    if (roomData.canJoin != true) {
-      startTimer();
-    }
-    notifyListeners();
-  }
-
-  Paint createPaint() {
-    return Paint()
-      ..strokeCap = strokeType
-      ..isAntiAlias = true
-      ..color = selectedColor.withOpacity(opacity)
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke
-      ..strokeJoin = StrokeJoin.bevel;
   }
 
   (double, double) normalizeCoordinates(PointModel point) {
@@ -260,7 +274,17 @@ class PaintScreenVM extends ChangeNotifier {
     notifyListeners();
   }
 
-  void pointsToDrawEx(PointModel? point) {
+  Paint createPaint() {
+    return Paint()
+      ..strokeCap = strokeType
+      ..isAntiAlias = true
+      ..color = selectedColor.withOpacity(opacity)
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeJoin = StrokeJoin.bevel;
+  }
+
+  void pointsToDrawEx({PointModel? point}) {
     if (point != null) {
       final (finalX, finalY) = normalizeCoordinates(point);
       if (paths.isEmpty) {
@@ -284,7 +308,23 @@ class PaintScreenVM extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updatedColorEx(Color updatedColor) {
+  void syncDataEx(
+      {required RoomModel roomData, required RoundModel roundData}) {
+    roomDataWrap.roomData = (roomData);
+    PlayerModel? playerData;
+    for (PlayerModel player in roomData.players) {
+      if (player.nickName == playerDataWrap.playerModel?.nickName) {
+        playerData = player;
+      }
+    }
+    playerDataWrap.playerModel = (playerData);
+    roundDataWrap.roundModel = (roundData);
+    renderHiddenTextWidget(roomData.word);
+    notifyListeners();
+  }
+
+  void updatedColorEx(int value) {
+    Color updatedColor = Color(value);
     selectedColor = updatedColor;
     if (paths.isEmpty || !paths.last.getBounds().isEmpty) {
       paths.add(Path());
@@ -317,62 +357,26 @@ class PaintScreenVM extends ChangeNotifier {
 
   void msgEx(Map data) {
     messages.add(data);
-    guessedUserCounter = data['guessedUserCounter'];
-    if (roomDataWrap.roomData!.turn.nickName == nickName) {
-      if (guessedUserCounter == (roomDataWrap.roomData!.players.length - 1)) {
-        socketRepository.socket
-            ?.emit('change_turn', roomDataWrap.roomData!.roomName);
-      }
-    }
-    scrollController.animateTo(
-      scrollController.position.maxScrollExtent + 40,
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-    );
-    notifyListeners();
-  }
-
-  void changeTurnEx(RoomModel roomData) {
-    print('client change turn called');
-    print(roomData.toString());
-    roomDataWrap.updateDataOfRoom(roomData);
-    renderHiddenTextWidget(roomDataWrap.roomData!.word);
-    guessedUserCounter = 0;
-    timeLeft = 60;
-    paths.clear();
-    pathPaints.clear();
-    pathPoints.clear();
-    alreadyGuessedByMe = false;
-    timer.cancel();
-    startTimer();
-    notifyListeners();
-  }
-
-  void closeInputEx() {
-    socketRepository.socket
-        ?.emit('update_score', roomDataWrap.roomData!.roomName);
-    alreadyGuessedByMe = true;
-    notifyListeners();
-  }
-
-  void updateScoreEx(RoomModel roomData) {
-    roomDataWrap.updateDataOfRoom(roomData);
+    _paintScreenUIEventSink.add(ScrollEvent());
     notifyListeners();
   }
 
   void showLeaderBoardEx(RoomModel roomData) {
-    print('told to show leader board');
     for (int i = 0; i < roomData.players.length; i++) {
       if (winnerPoints < roomData.players[i].points) {
         winner = roomData.players[i].nickName;
         winnerPoints = roomData.players[i].points;
       }
     }
-    timer.cancel();
-    showFinalLeaderboardController.sink.add(true);
-    // print('wether to show : ${showFinalLeaderboard}');
-    timeLeft = 0;
+    showFinalLeaderboard = true;
     notifyListeners();
-    roomDataWrap.updateDataOfRoom(roomData);
+    roomDataWrap.roomData = (roomData);
+  }
+
+  void someoneDisonnectedEx(RoomModel roomData, PlayerModel disconnectedUser) {
+    roomDataWrap.roomData = (roomData);
+    final disconnectedNickName = disconnectedUser.nickName;
+    scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(content: Text('{$disconnectedNickName} disconnected')));
   }
 }

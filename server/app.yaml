@@ -1,5 +1,0 @@
-runtime: nodejs20
-env: flex
-instance_class: F1
-network:
-  session_affinity: true
